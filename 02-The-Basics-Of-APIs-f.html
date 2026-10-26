@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>The Basics of APIs</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">The Basics of APIs <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+<h1 id="the-basics-of-apis">The Basics of APIs</h1>
+<h2 id="application-programming-interface">Application Programming Interface</h2>
+<h3 id="what-an-application-programming-interface-actually-means">What an Application Programming Interface actually means</h3>
+<p>A web API is essentially a <strong>handle</strong>, a <strong>structured control point</strong> that lets applications communicate with each other over a network.</p>
+<p>That <strong>structured control point</strong> is exactly what we call an <strong>interface</strong>.</p>
+<p><img src="assets/images/application-programming-interface.jpg" alt="Application programming interface" title="Application programming interface"></p>
+<p>And web APIs are not the only kind of APIs that exist.</p>
+<p>Any structured protocol for communicating with an application is an API.</p>
+<p>For example, when we write a program that needs to launch a Windows application, we use the Windows API.</p>
+<p>We call a function that tells Windows to open this application.</p>
+<p>If Windows did not expose an API, we would have no way of communicating that from our own code.</p>
+<h2 id="http---how-web-communication-works">HTTP - How Web communication works</h2>
+<p><img src="assets/images/http-communication.jpg" alt="HTTP Communication" title="HTTP Communication"></p>
+<p>HTTP isn't secure so HTTPS was created to add a secure layer.</p>
+<p><img src="assets/images/https-communication.jpg" alt="HTTPS Communication" title="HTTPS Communication"></p>
+<h2 id="web-communication-in-action">Web communication in action</h2>
+<p><img src="assets/images/https-request-page.jpg" alt="HTTPS Request page" title="HTTPS Request page"></p>
+<p>There are a number of request methods that are available to us.</p>
+<p><img src="assets/images/request-methods.jpg" alt="HTTPS Request methods" title="HTTPS Request methods"></p>
+<p>We get status codes from the request to show if the request was successful or not.</p>
+<p><img src="assets/images/status-codes.jpg" alt="HTTPS status codes" title="HTTPS status codes"></p>
+<p>In the case above a status code of <strong>304</strong> means that the web page was cached and successful. Normally you would see a status code of <strong>200</strong> meaning successfully received.</p>
+<h2 id="requests-and-responses">Requests and Responses</h2>
+<p>The client sends a <strong>Request</strong> to the API. In the example it is a <code>GET</code> request for a book with the <code>Id</code> of 1.</p>
+<p><img src="assets/images/status-codes.jpg" alt="HTTPS status codes" title="HTTPS status codes"></p>
+<p>The <strong>Response</strong> is sent back to the user as JSON.</p>
+<h2 id="resource-vs-endpoint">Resource vs Endpoint</h2>
+<p>A <strong>Resource</strong> is a <strong>thing</strong> that the API exposes. For example a resource could be a hotel, bookings, rooms,  customers, etc.</p>
+<p>An <strong>Endpoint</strong> is a specific <strong>URL path</strong> and an <strong>HTTP method</strong> used to operate on a <strong>resource</strong>.</p>
+<p><img src="assets/images/resource-vs-endpoint.jpg" alt="Resource vs Endpoint" title="Resource vs Endpoint"></p>
+<p>We could also have another set of endpoints that work on bookings.</p>
+<p>Another conceptual way to look at resources verses endpoints is that a resource exposes <strong>what</strong> an API exposes and an endpoint is <strong>how</strong> we manipulate that resource.</p>
+<p><img src="assets/images/resource-vs-endpoint-2.jpg" alt="Resource vs Endpoint" title="Resource vs Endpoint"></p>
+<p>When building an API we typically group our endpoints related to a give resource in one class and write one method for each endpoint.</p>
+<p><img src="assets/images/endpoints-for-a-resource.jpg" alt="Endpoints for a resource" title="Endpoints for a resource"></p>
+<p>These keep the code organised.</p>
+<p>An API is essentially a collection of endpoints that form a contract that tell anybody coding the API exactly what operations are available.</p>
+<p><img src="assets/images/collection-of-endpoints.jpg" alt="Collection of endpoints" title="Collection of endpoints"></p>
+<p>The API documentation also allows the user to see how the endpoints are grouped and used. For this we will use Swagger.</p>
+
+
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>

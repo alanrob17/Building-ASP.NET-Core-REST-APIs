@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Defining The First API Endpoint</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Defining The First API Endpoint <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+<h1 id="defining-the-first-api-endpoint">Defining The First API Endpoint</h1>
+<h2 id="the-api-we-will-build">The API we will build</h2>
+<p>We are building a Book library API.</p>
+<p>We Will build a set of API endpoints that are specific URLs which accept <strong>Requests</strong> and return <strong>Responses</strong> for our particular action.</p>
+<p>These are the Book entity endpoints.</p>
+<p><img src="assets/images/endpoints.jpg" alt="Endpoints" title="Endpoints"></p>
+<p>We will have sets of endpoints for Books, Authors, Loans and more. The data will be stored in a PostGresSQL database.</p>
+<p>On an online system this would be done through a set of web pages but in our case we will be entering data sending the requests ourselves. We will use <code>Scalar</code>, an online documentation system to enter the data.</p>
+<p>Building API endpoints is the heart of building an API but we will be doing more than that.</p>
+<p><img src="assets/images/library-management-api.jpg" alt="Library Management API" title="Library Management API"></p>
+<h2 id="minimal-apis-vs-controllers">Minimal APIs Vs Controllers</h2>
+<p>Minimal APIs are usually used for smaller projects. Creating a number of endpoints in Minimal APIs can get messy very quickly. We end up creating a number of classes for different endpoints to reduce this clutter.</p>
+<p><img src="assets/images/controllers-vs-minimal-apis.jpg" alt="Controllers vs Minimal APIs" title="Controllers vs Minimal APIs"></p>
+<h3 id="an-example-of-a-controller-and-a-minimal-api-endpoint">An example of a Controller and a Minimal API endpoint</h3>
+<p>The endpoints in the example below do exactly the same task. They return a Book based on a Book Id. One is a Controller and the other is a Minimal API endpoint.</p>
+<p><img src="assets/images/controller-and-minimal-api-endpoints.jpg" alt="Controller and Minimal APIs endpoints" title="Controller and Minimal APIs endpoints"></p>
+<p><strong>Note:</strong> that the code to get a Book based on its Id is essentially the same for the Controller and Minimal API endpoints.</p>
+<p><img src="assets/images/sample-code.jpg" alt="Sample code" title="Sample code"></p>
+<p>When you use Controllers over Minimal APIs depends on a number of conditions.</p>
+<p><img src="assets/images/differences-between-contollers-and-minimal-apis.jpg" alt="Differences" title="Differences"></p>
+<h2 id="defining-the-first-entity">Defining the first entity</h2>
+<p>We will start with the simple approach of Minimal APIs.</p>
+<p>Create an <strong>Entities</strong> directory.</p>
+<p>Crate a class named <code>Category</code>.</p>
+<pre class="prettyprint"><code><div>    public class Category
+    {
+        public int Id { get; <span class="hljs-built_in">set</span>; }
+        public string Name { get; <span class="hljs-built_in">set</span>; }
+    }
+</div></code></pre>
+<p>*<em>Note:</em> we get a warning on the <code>Name</code> property. The <code>Name</code> property is a reference type of <code>string</code>. We could make it a nullable type:</p>
+<pre class="prettyprint"><code><div>    public string? Name { get; <span class="hljs-built_in">set</span>; }
+</div></code></pre>
+<p>There is nothing to stop a user from creating a <code>Category</code> type with only an <code>Id</code> value. This would be redundant because a <code>Category</code> would have to have a name.</p>
+<p>We can fix this by adding the <code>required</code> keyword to the property.</p>
+<pre class="prettyprint"><code><div>    public required string Name { get; <span class="hljs-built_in">set</span>; }
+</div></code></pre>
+<p>Now the compiler will not allow the user to create a <code>Category</code> without a <code>Name</code> value.</p>
+<p>Why don't we use required for the <code>Id</code> value as well? We don't need to because once we start using a database Entity Framework will automatically generate an <code>Id</code> for us.</p>
+<p>The <code>Category</code> class is relatively simple and we could create a <code>Record</code> to hold the <code>Category</code> information for us but we need to create a class for Entity Framework needs to be able to create a parameter-less constructor to be usable.</p>
+<p>With this Entity defined we can now write our first endpoint.</p>
+<h2 id="defining-the-first-endpoint">Defining the first endpoint</h2>
+<p>Remove the sample endpoint from <code>Program.cs</code>.</p>
+<p>Now create an <strong>Endpoints</strong> directory. In it we create a <code>CategoriesEndpoints</code> class for our endpoints.</p>
+<p>Also make this class <strong>static</strong>. Why? because we never need to make an instance of this class. It is just a container for methods. A static class doesn't use a constructor and we don't need one. All dependencies will be injected into our methods.</p>
+<p>Static classes shouldn't hold any state of its own and this prevents accidents from happening.</p>
+<p>This class will never be a dependency for another class so we don't need to implement an Interface. Also because nothing depends on this class we will never have to mock the class in tests.</p>
+<h2 id="defining-our-first-endpoint-using-get">Defining our first endpoint using Get</h2>
+<pre class="prettyprint"><code><div>    private static async Task&lt;IResult&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+    {
+        var categories = // Get categories from storage.
+        <span class="hljs-built_in">return</span> Results.Ok(categories);
+    }
+</div></code></pre>
+<p>The method is <strong>private</strong> because it doesn't need to be accessed from outside this class. We will see soon how it gets exposed to the API.</p>
+<p>It is <strong>static</strong> because the class itself is static and can only contain static members.</p>
+<p><strong>async</strong> is used because endpoints often use asynchronous operations when reading from the database and we don't want to block the thread while we are waiting.</p>
+<p>The return type is <strong>Task</strong> of <strong>IResult</strong>. <strong>IResult</strong> is an interface that represents the HTTP response that we want to send back. To build our response we need to use the static <code>Results</code> class which provides methods like <code>Results.Ok()</code>. That method returns a result implementing <code>IResult</code> and sets the HTTP code to <strong>200</strong> meaning that the response was successful.</p>
+<p>We will use a <code>List</code> to store our data.</p>
+<pre class="prettyprint"><code><div>    public static class CategoriesEndpoints
+    {
+        private static List&lt;Category&gt; _categories =
+        [
+            new Category { Id = 1, Name = <span class="hljs-string">&quot;Biography&quot;</span> },
+            new Category { Id = 2, Name = <span class="hljs-string">&quot;Novel&quot;</span> }
+        ];
+        
+        private static async Task&lt;IResult&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+        {
+            var categories = _categories;
+            <span class="hljs-built_in">return</span> Results.Ok(categories);
+        }
+    }
+</div></code></pre>
+<p><strong>Note</strong> that Visual Studio has greyed out the <code>GetAll()</code> method because it is not being used.</p>
+<p>To be able to use this class we need to register it explicitly. Once we do it becomes a handler method for handling a specific HTTP request. Every endpoint that we create will follow the same process from now on. One method for one endpoint.</p>
+<h2 id="registering-the-endpoint">Registering the endpoint</h2>
+<p>Open the <strong>Endpoints Explorer</strong> in Visual Studio.</p>
+<blockquote>
+<p>View --&gt; Other Windows --&gt; Endpoints Explorer</p>
+</blockquote>
+<p>This is only used in Visual Studio and is only used for this example. In future we will use <code>Scalar</code> which is better.</p>
+<p>It shows all endpoints currently registered in our application.</p>
+<p>Our <code>getAll()</code> method is just a regular C# method at this point. ASP.NET Core has no idea it exists. Let's fix it.</p>
+<p>To register our endpoint, we will add a dedicated public method to our <code>CategoriesEndpoints</code> class.</p>
+<pre class="prettyprint"><code><div>    public static void MapCategoriesEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app
+            .MapGroup(<span class="hljs-string">&quot;/api/categories&quot;</span>)
+            .WithTags(<span class="hljs-string">&quot;Categories&quot;</span>);
+        group.MapGet(<span class="hljs-string">&quot;/&quot;</span>, GetAll);
+    }
+</div></code></pre>
+<p>The <code>MapCategoriesEndpoints()</code> method is public and static.</p>
+<p>Public, because it will be called from <code>Program.cs</code>and static, because the class is static.</p>
+<p>It is an extension method on <code>IEndpointRouteBuilder</code>. we use the <strong>this</strong> keyword in front of the parameter.</p>
+<p>In short, extension methods let us add methods to a type, even if this type is defined outside our codebase.</p>
+<p>Or like in this case, when a type cannot have full-bodied methods defined, like the interface we are using here.</p>
+<p>With this method defined like this, we will be able to call it on any object implementing this interface, just like it was defined in this object's type.</p>
+<p>Before we explain what exactly this <code>IEndpointRootBuilder</code> is, we need to understand routing.</p>
+<h3 id="routing">Routing</h3>
+<p><strong>Routing</strong> is the mechanism that maps an incoming HTTP request, so the method and URL, to the specific code that should handle it.</p>
+<p>In our case, the <strong>GET</strong> request with this URL should be redirected to this <code>getAll()</code> method.</p>
+<p><img src="assets/images/routing.jpg" alt="Routing" title="Routing"></p>
+<p>In our case a request like <code>GET /api/Categories</code> should be routed to the C# <code>GetAll()</code> handler. Routing is a key part of work on an API. It is the framework on what request gets routed to what method.</p>
+<p>We must tell the framework which requests get redirected to which methods.</p>
+<p>And this is exactly what we can use the <code>IEndpointRootBuilder</code> for.</p>
+<p>It is an interface from ASP.NET Core that represents the part of the application responsible for routing.</p>
+<p>In other words, an object that decides which method gets called when a request comes in. As it turns out, we already have an object implementing this interface.</p>
+<p>In <code>Program.cs</code>, we have an object called <code>App</code>, which is of type <code>WebApplication</code>.</p>
+<p>If we look at its implementation we see that it implements <code>IEndpointRouteBuilder</code> which is the object we will use when calling the extension method we defined.</p>
+<pre class="prettyprint"><code><div>    group.MapGet(<span class="hljs-string">&quot;/&quot;</span>, GetAll);
+</div></code></pre>
+<p>And here is where we actually configure the routing with a call to the <code>MapGet()</code> method.</p>
+<p>This method registers our <code>getAll()</code> method as the handler for <code>GET</code> requests.</p>
+<p>We could call this method in our <code>Program.cs</code> but it would get messy fast. It is better to call an extension method.</p>
+<p>This is the standard pattern for organizing minimal API endpoints.</p>
+<p>It keeps <code>Program.cs</code> clean, while still giving us full access to the routing system.</p>
+<p>Let's understand this method.</p>
+<p><code>MapGroup</code> creates a root group.</p>
+<p>Every endpoint we register inside this group will automatically have <code>api/categories</code> as the beginning of its URL.</p>
+<p>Right now, we only have one endpoint, so the benefit is not obvious yet. But we will soon add more, and all of them will share the same prefix, without us having to repeat it every time.</p>
+<p>The <code>withTags()</code> method adds a tag to the group. <strong>Tags</strong> are used by documentation tools. We will see this clearly once we set up Scalar. They control how endpoints are grouped and displayed in the API documentation.</p>
+<p>In our case, all endpoints related to categories will appear together under the Categories label.</p>
+<p>Now the <code>MapGet()</code> method.</p>
+<p>The first argument is the root for this specific endpoint.</p>
+<p>A single forward slash means we are not adding anything on top of what the group already defines.</p>
+<p>And that makes sense here, because this endpoint returns all categories, and does not need any additional information in the URL, like for example the <code>Id</code>.</p>
+<p>The full URL will simply be <code>api/categories</code>.</p>
+<p>Later, when we add an endpoint that fetches a single category by Id, the root will look different something like <code>/id</code> but for now, a slash is all we need.</p>
+<p>The second argument is the method to call when the request comes in.</p>
+<p>So in short, this configures routing in this way. When a GET request comes in with an URL equal to <code>api/categories</code>, the <code>GetAll</code> method will be called.</p>
+<p><img src="assets/images/routing-example.jpg" alt="Routing example" title="Routing example"></p>
+<p>Now we need to call the <code>MapCategoryEndpoints</code> method from <code>Program.cs</code>.</p>
+<p>First, we need to add a using directive at the top of the <code>Program.cs</code> file.</p>
+<pre class="prettyprint"><code><div>    using LibraryManagement.Api.Endpoints;
+</div></code></pre>
+<p>And then, before <code>app.run()</code> we should call our method.</p>
+<pre class="prettyprint"><code><div>    ...
+    app.UseAuthorization();
+
+    app.MapCategoriesEndpoints();
+
+    app.Run();
+</div></code></pre>
+<p>This is the line that actually connects everything together. Without it, the registration method we just wrote would never be called. Let's rebuild the project and check the Endpoints Explorer again. Our endpoint is now visible.</p>
+<p>The framework knows it exists and how to route requests to it.</p>
+<p>Very soon, we will run the application and send the first request to this endpoint.</p>
+
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>

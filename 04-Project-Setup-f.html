@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Project Setup and Overview</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Project Setup and Overview <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+
+<h1 id="project-setup-and-overview">Project Setup and Overview</h1>
+<h2 id="creating-a-new-aspnet-core-web-api-project">Creating a new ASP.Net Core Web API project</h2>
+<p>Call the project <strong>LibraryManagement.Api</strong>.</p>
+<p><img src="assets/images/create-project.jpg" alt="Create a new Project" title="Create a new Project"></p>
+<p>Make sure to <strong>Enable Open API support</strong>. We will use this for documentation.</p>
+<p>We will use both <strong>Controllers</strong> and <strong>Minimal API</strong> but for now turn Controllers off and go with the Minimal API option.</p>
+<h2 id="project-structure-overview">Project structure overview</h2>
+<p>We have a file named <code>LibraryManagement.Api.http</code> that contains endpoints.</p>
+<pre class="prettyprint"><code><div>@LibraryManagement.Api_HostAddress = http://localhost:5085
+
+GET {{LibraryManagement.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+</div></code></pre>
+<h2 id="understanding-the-programcs-file">Understanding the Program.cs file</h2>
+<p>This is the heart of our application. It is setup to run our application with one <strong>Minimal API</strong> endpoint.</p>
+<p>The first method call in <code>Program.cs</code> is to call:</p>
+<pre class="prettyprint"><code><div>    var builder = WebApplication.CreateBuilder(args);
+</div></code></pre>
+<p><code>CreateBuilder</code> is crucial to our application and it is where we register all services our application needs. Things like database access and mapping tools, etc.</p>
+<p>For now the only service that is registered is <code>AddOpenApi</code></p>
+<pre class="prettyprint"><code><div>    builder.Services.AddOpenApi();
+</div></code></pre>
+<p>This is used to document the API. Documentation will be generated automatically describing our endpoint. We will use tools to view our API.</p>
+<p>Once all services are registered we will call <code>Builder.Build()</code>:</p>
+<pre class="prettyprint"><code><div>    var app = builder.Build();
+</div></code></pre>
+<p>This finishes the configuration phase and create the actual application object.</p>
+<p>A good thing to remember is that everything before <code>Builder.Build()</code> is service registration.</p>
+<p>The next statement is used if were are in the Development cycle.</p>
+<pre class="prettyprint"><code><div>    // Configure the HTTP request pipeline.
+    <span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+    }
+</div></code></pre>
+<p>In this example we will run <code>app.MapOpenApi()</code> if we are in development.</p>
+<p>The first <code>MapOpenApi()</code> statement registers the service (Be ready to use it) and the last exposes the OpenAPi endpoint (Use it). This statement is only useful to us in the Development process.</p>
+<p>The next statement ensures that all <strong>http</strong> requests are redirected to <strong>https</strong>.</p>
+<pre class="prettyprint"><code><div>    app.UseHttpsRedirection();
+</div></code></pre>
+<p>This completes the technical setup and the next section is our sample endpoint.</p>
+<p>First, we create some sample data:</p>
+<pre class="prettyprint"><code><div>var summaries = new[]
+{
+    <span class="hljs-string">&quot;Freezing&quot;</span>, <span class="hljs-string">&quot;Bracing&quot;</span>, <span class="hljs-string">&quot;Chilly&quot;</span>, <span class="hljs-string">&quot;Cool&quot;</span>, <span class="hljs-string">&quot;Mild&quot;</span>, <span class="hljs-string">&quot;Warm&quot;</span>, <span class="hljs-string">&quot;Balmy&quot;</span>, <span class="hljs-string">&quot;Hot&quot;</span>, <span class="hljs-string">&quot;Sweltering&quot;</span>, <span class="hljs-string">&quot;Scorching&quot;</span>
+};
+</div></code></pre>
+<p>Next is our sample endpoint named <code>weatherforecast</code>.</p>
+<pre class="prettyprint"><code><div>app.MapGet(<span class="hljs-string">&quot;/weatherforecast&quot;</span>, (HttpContext httpContext) =&gt;
+{
+    var forecast = Enumerable.Range(1, 5).Select(index =&gt;
+        new WeatherForecast
+        {
+            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        })
+        .ToArray();
+    <span class="hljs-built_in">return</span> forecast;
+})
+.WithName(<span class="hljs-string">&quot;GetWeatherForecast&quot;</span>);
+</div></code></pre>
+<p>The next statement runs our sample endpoint:</p>
+<pre class="prettyprint"><code><div>    app.Run();
+</div></code></pre>
+<p>This means that the program keeps running and waiting for requests and only stops when we end it.</p>
+<p><strong>Note:</strong> any code that we write after <code>app.Run()</code> won't be executed so make sure that all of your code is before this statement.</p>
+<h2 id="running-your-api-and-sending-your-first-request">Running your Api and sending your first request</h2>
+<p>We are going to open the Integrated terminal to run our application with this command (make sure you are in the correct directory):</p>
+<pre class="prettyprint"><code><div>    dotnet run --launch-profile https
+</div></code></pre>
+<p>This will start the application. When you run this not a lot seems to happen but the application is running in the background. We are actually connected to <code>localhost</code> where our API is hosted.</p>
+<p><img src="assets/images/localhost-settings.jpg" alt="Localhost settings" title="Localhost settings"></p>
+<p>There are 2 localhost settings but we are only interested in the <strong>https</strong> setting. The port number states which application or service on a machine should receive incoming traffic requests from an incoming service. Multiple applications can run on a machine at the same time and the port identifies the application that is currently running.</p>
+<p>If you enter the following address:</p>
+<blockquote>
+<p>http://localhost:5085</p>
+</blockquote>
+<p>Notice that it changes to:</p>
+<blockquote>
+<p>https://localhost:7040</p>
+</blockquote>
+<p>This is because of the <strong>https</strong> redirection statement in <code>Program.cs</code>.</p>
+<p>Still there is nothing showing and this is because <code>https://localhost:7040</code> is the root address of our API. By itself it doesn't return anything.</p>
+<p>To actually use the API we need to send the request to a specific endpoint. What endpoint is exposed? There is only one in our <code>Program.cs</code> file and that is <code>/weatherforecast</code>.</p>
+<p>To consume our sample endpoint:</p>
+<blockquote>
+<p>https://localhost:7040/weatherforecast</p>
+</blockquote>
+<p>This produces a JSON array of objects that show temperatures. This is basically raw data that might be sent to a web page that produces a graphical weather chart.</p>
+<p>To close the application just press <code>CTRL-C</code> in the terminal.</p>
+<h2 id="using-the-console">Using the console</h2>
+<p>You can see our application running in the console. It is showing the ports that it is running on and that the application has started. we can also add <code>Console.WriteLine()</code> statements to <code>Program.cs</code> to give us more information.</p>
+<p>Add this statement before <code>app.Run()</code>:</p>
+<pre class="prettyprint"><code><div>Console.WriteLine(<span class="hljs-string">&quot;Started the application...&quot;</span>);
+
+app.Run();
+</div></code></pre>
+<blockquote>
+<p>Started the application...<br>
+info: Microsoft.Hosting.Lifetime[14]<br>
+Now listening on: https://localhost:7040<br>
+...</p>
+</blockquote>
+<p>This is alright for quick testing but in future we will register a logging service.</p>
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>

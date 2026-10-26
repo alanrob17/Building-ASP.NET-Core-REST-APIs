@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Testing the API manually</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Testing the API manually <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+
+<h1 id="testing-the-api-manually">Testing the API manually</h1>
+<h2 id="calling-the-api-from-the-ide">Calling the API from the IDE</h2>
+<p>Type in the API call</p>
+<pre class="prettyprint"><code><div>    https://localhost:7040/api/categories
+</div></code></pre>
+<p>Returns:</p>
+<pre class="prettyprint"><code><div>[
+    {
+        <span class="hljs-string">&quot;id&quot;</span>: 1,
+        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Biography&quot;</span>
+    },
+    {
+        <span class="hljs-string">&quot;id&quot;</span>: 2,
+        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Novel&quot;</span>
+    }
+]
+</div></code></pre>
+<p>Using the browser is fine for simple <strong>Get</strong> requests but we will need something more substantial for Update Posts, etc.</p>
+<p>In your Solution you can see a <code>LibraryManagement.Api.http</code> file. This file can used to send requests to an API without using the browser or any external tools, without even leaving the IDE. And since it is just a text file, we can save the requests here.</p>
+<p>My HTTP file looks like this:</p>
+<pre class="prettyprint"><code><div>@LibraryManagement.Api_HostAddress = http://localhost:5085
+
+
+<span class="hljs-comment">###</span>
+
+</div></code></pre>
+<p>The first line defines a reusable variable that can be referenced anywhere in the file. Notice the <strong>@</strong> symbol used for variable declaration. This variable stores the base URL of the local server.</p>
+<p>The next line <code>###</code> is an endpoint separator that shows where one endpoint ends and another starts.</p>
+<p>In the Endpoints Explorer right-click on <code>/api/categories</code> and select <code>Generate Request</code>. This will add the endpoint to the HTTP file.</p>
+<pre class="prettyprint"><code><div>@LibraryManagement.Api_HostAddress = https://localhost:7040
+
+GET {{LibraryManagement.Api_HostAddress}}/api/categories
+
+<span class="hljs-comment">###</span>
+
+</div></code></pre>
+<p>Once you have added this you can click on the <code>Send request</code> link that appears above the endpoint to run it as shown below.</p>
+<p><img src="assets/images/http-endpoint.jpg" alt="HTTP endpoint" title="HTTP endpoint"></p>
+<p><strong>Note</strong> in Visual Studio Code you would have to manually enter the endpoint. Also install the <strong>REST Client</strong> extension and that will allow you to run the endpoint.</p>
+<h2 id="the-importance-of-endpoint-registration">The importance of endpoint registration</h2>
+<pre class="prettyprint"><code><div>    ...
+    app.UseAuthorization()
+
+    app.MapCategoriesEndpoints()
+
+    app.Run();
+</div></code></pre>
+<p>If you forget to register <code>MapCategoriesEndpoints()</code> and try to reach an endpoint you will get a <strong>404</strong> error.</p>
+<h2 id="openapi-documentation">OpenAPI documentation</h2>
+<p>Calling endpoints from an HTTP file is a perfectly valid technique and worth knowing. It is the most basic way to send requests to our API, with no extra tools required.</p>
+<p>In Visual Studio Community, we can generate requests automatically, but if anything changes in our endpoint definition, we would have to regenerate them.</p>
+<p>In Visual Studio Code, we have to write every request by hand and update it manually whenever something changes.</p>
+<p>As our API grows, we need something better. A proper interface where we can see all our endpoints in one place and test them interactively.</p>
+<p>Many popular tools for testing and exploring APIs use <code>OpenAPI</code> documentation and build an interactive interface based on it.</p>
+<p>As a quick reminder, <code>OpenAPI</code> is a standard format for describing what endpoints API exposes, what inputs they accept, and what they return.</p>
+<p>While we were setting up the project, we chose an option to enable <code>OpenAPI</code> documentation.</p>
+<p>Choosing that option during project setup installed the relevant packages and added those lines to <code>Program.cs</code>.</p>
+<pre class="prettyprint"><code><div>    ...
+    builder.Services.AddOpenApi();
+             
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    <span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+    }
+</div></code></pre>
+<p><strong>Note:</strong> I had to manually enter the following statement. Without it the documentation wouldn't work.</p>
+<pre class="prettyprint"><code><div>    builder.Services.AddOpenApi();
+</div></code></pre>
+<p>We can access this documentation by:</p>
+<pre class="prettyprint"><code><div>    https://localhost:7040/openapi/v1.json
+</div></code></pre>
+<p><img src="assets/images/openapi-documentation.jpg" alt="OpenAPI Documentation" title="OpenAPI Documentation"></p>
+<p>It's not very readable for humans, but if we look closely, we can see it contains the definition for our category's endpoint. And the supported method, the tags, the possible responses.</p>
+<p>This documentation may be hard to read directly, but it is perfect for other tools. Tools that can read it, interpret it, and present a nicely formatted interface based on that data.</p>
+<p>And what makes it even better is that this documentation is updated automatically as we work on the API.</p>
+<p>When we add a new endpoint, it will appear here automatically the next time the application runs.</p>
+<h2 id="setting-up-scalar">Setting up Scalar</h2>
+<p>Scalar is a modern open-source API documentation tool that generates an interactive interface from the OpenAPI specification.</p>
+<p>Scalar reads from the OpenAPI document every time the app runs, it always reflects our current endpoints. There is nothing to update manually.</p>
+<p>You may also have heard of Swagger UI. For many years, it was the standard tool in the .NET ecosystem, included by default in every new Web API project.</p>
+<p>It did the same job, read the open API specification, and present an interactive interface in the browser. In .NET 9, Microsoft removed it from the default project templates, and Scalar became a natural replacement.</p>
+<p>It integrates with ASP.NET Core with just a few lines of code, and is available as a NuGet package.</p>
+<p>To install <strong>Scalar.AspNetCore</strong> use the Nuget Package Manager.</p>
+<p>But we can also use the CLI because it works the same way in Visual Studio Code.</p>
+<blockquote>
+<p>dotnet add package Scalar.AspNetCore</p>
+</blockquote>
+<p>Scalar is now installed, but we need to configure it.</p>
+<p>In <code>Program.cs</code>.</p>
+<p>At the top of the file, we need to add a <code>using</code> directive so that the Scalar extension methods are available.</p>
+<pre class="prettyprint"><code><div>    using Scalar.AspNetCore;
+</div></code></pre>
+<p>We don't need Scalar in production so add it to the <code>IsDevelopment()</code> section.</p>
+<pre class="prettyprint"><code><div>    // Configure the HTTP request pipeline.
+    <span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
+</div></code></pre>
+<p>Test it:</p>
+<blockquote>
+<p>https://localhost:7040/scalar/v1</p>
+</blockquote>
+<p><img src="assets/images/scalar-interface.jpg" alt="Scalar documentation" title="Scalar documentation"></p>
+<h2 id="using-scalar">Using Scalar</h2>
+<p>Scalar uses the <code>Categories</code> Tag that we set up to group all Categories endpoints.</p>
+<pre class="prettyprint"><code><div>    var group = app
+        .MapGroup(<span class="hljs-string">&quot;/api/categories&quot;</span>)
+        .WithTags(<span class="hljs-string">&quot;Categories&quot;</span>);
+</div></code></pre>
+<p>Relates to:</p>
+<p><img src="assets/images/categories-tag.jpg" alt="Categories Tag" title="Categories Tag"></p>
+<p>When we add <code>Books</code> endpoints they will be grouped next to Categories.</p>
+<h2 id="understanding-the-launchsettingsjson-file">Understanding the launchSettings.json file</h2>
+<p>The launch settings file configures the way our application starts, which URL it listens on, which environment it runs in, and whether it opens in browser automatically.</p>
+<p><code>launchSettings.json</code> is only used for development. We can change our settings to run Scalar when we run our API.</p>
+<p>Change <code>launchBrowser</code> to <code>true</code>.</p>
+<p>Add the <code>launchUrl</code> key with a value of <code>scalar/v1</code>.</p>
+<pre class="prettyprint"><code><div>    <span class="hljs-string">&quot;https&quot;</span>: {
+      <span class="hljs-string">&quot;commandName&quot;</span>: <span class="hljs-string">&quot;Project&quot;</span>,
+      <span class="hljs-string">&quot;dotnetRunMessages&quot;</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-string">&quot;launchBrowser&quot;</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-string">&quot;launchUrl&quot;</span>: <span class="hljs-string">&quot;scalar/v1&quot;</span>,
+      <span class="hljs-string">&quot;applicationUrl&quot;</span>: <span class="hljs-string">&quot;https://localhost:7040;http://localhost:5085&quot;</span>,
+      <span class="hljs-string">&quot;environmentVariables&quot;</span>: {
+        <span class="hljs-string">&quot;ASPNETCORE_ENVIRONMENT&quot;</span>: <span class="hljs-string">&quot;Development&quot;</span>
+      }
+    }
+</div></code></pre>
+<p>Now when you run the project it will launch the browser with Scalar.</p>
+<h3 id="run-your-project-in-visual-studio-code">Run your project in Visual Studio Code</h3>
+<p>We can run the API with:</p>
+<blockquote>
+<p>dotnet run --launch-profile https</p>
+</blockquote>
+<p>This is a long command and in VS Code we can change the command through the launchSettings.json file.</p>
+<p>Swap the <code>http</code> and <code>https</code> sections around so the <code>https</code> section is on top. Now use:</p>
+<blockquote>
+<p>dotnet run</p>
+</blockquote>
+<p><strong>Note:</strong> Also change the sections in Visual Studio as well if you want to run the API from the command line. You also have to enter the &quot;scalar/v1&quot; section to your Url to get it to work.</p>
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>

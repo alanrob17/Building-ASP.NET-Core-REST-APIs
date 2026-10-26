@@ -1,0 +1,8 @@
+.vscode/
+.DS_Store
+thumbs.db
+*.log
+*.tmp
+*.bak
+*.zip
+*.rar

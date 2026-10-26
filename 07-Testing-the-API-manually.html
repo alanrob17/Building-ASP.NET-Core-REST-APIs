@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>07-Testing-the-API-manually.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="testing-the-api-manually">Testing the API manually</h1>
+<h2 id="calling-the-api-from-the-ide">Calling the API from the IDE</h2>
+<p>Type in the API call</p>
+<pre class="hljs"><code><div>    https://localhost:7040/api/categories
+</div></code></pre>
+<p>Returns:</p>
+<pre class="hljs"><code><div>[
+    {
+        <span class="hljs-string">&quot;id&quot;</span>: 1,
+        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Biography&quot;</span>
+    },
+    {
+        <span class="hljs-string">&quot;id&quot;</span>: 2,
+        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Novel&quot;</span>
+    }
+]
+</div></code></pre>
+<p>Using the browser is fine for simple <strong>Get</strong> requests but we will need something more substantial for Update Posts, etc.</p>
+<p>In your Solution you can see a <code>LibraryManagement.Api.http</code> file. This file can used to send requests to an API without using the browser or any external tools, without even leaving the IDE. And since it is just a text file, we can save the requests here.</p>
+<p>My HTTP file looks like this:</p>
+<pre class="hljs"><code><div>@LibraryManagement.Api_HostAddress = http://localhost:5085
+
+
+<span class="hljs-comment">###</span>
+
+</div></code></pre>
+<p>The first line defines a reusable variable that can be referenced anywhere in the file. Notice the <strong>@</strong> symbol used for variable declaration. This variable stores the base URL of the local server.</p>
+<p>The next line <code>###</code> is an endpoint separator that shows where one endpoint ends and another starts.</p>
+<p>In the Endpoints Explorer right-click on <code>/api/categories</code> and select <code>Generate Request</code>. This will add the endpoint to the HTTP file.</p>
+<pre class="hljs"><code><div>@LibraryManagement.Api_HostAddress = https://localhost:7040
+
+GET {{LibraryManagement.Api_HostAddress}}/api/categories
+
+<span class="hljs-comment">###</span>
+
+</div></code></pre>
+<p>Once you have added this you can click on the <code>Send request</code> link that appears above the endpoint to run it as shown below.</p>
+<p><img src="assets/images/http-endpoint.jpg" alt="HTTP endpoint" title="HTTP endpoint"></p>
+<p><strong>Note</strong> in Visual Studio Code you would have to manually enter the endpoint. Also install the <strong>REST Client</strong> extension and that will allow you to run the endpoint.</p>
+<h2 id="the-importance-of-endpoint-registration">The importance of endpoint registration</h2>
+<pre class="hljs"><code><div>    ...
+    app.UseAuthorization()
+
+    app.MapCategoriesEndpoints()
+
+    app.Run();
+</div></code></pre>
+<p>If you forget to register <code>MapCategoriesEndpoints()</code> and try to reach an endpoint you will get a <strong>404</strong> error.</p>
+<h2 id="openapi-documentation">OpenAPI documentation</h2>
+<p>Calling endpoints from an HTTP file is a perfectly valid technique and worth knowing. It is the most basic way to send requests to our API, with no extra tools required.</p>
+<p>In Visual Studio Community, we can generate requests automatically, but if anything changes in our endpoint definition, we would have to regenerate them.</p>
+<p>In Visual Studio Code, we have to write every request by hand and update it manually whenever something changes.</p>
+<p>As our API grows, we need something better. A proper interface where we can see all our endpoints in one place and test them interactively.</p>
+<p>Many popular tools for testing and exploring APIs use <code>OpenAPI</code> documentation and build an interactive interface based on it.</p>
+<p>As a quick reminder, <code>OpenAPI</code> is a standard format for describing what endpoints API exposes, what inputs they accept, and what they return.</p>
+<p>While we were setting up the project, we chose an option to enable <code>OpenAPI</code> documentation.</p>
+<p>Choosing that option during project setup installed the relevant packages and added those lines to <code>Program.cs</code>.</p>
+<pre class="hljs"><code><div>    ...
+    builder.Services.AddOpenApi();
+             
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    <span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+    }
+</div></code></pre>
+<p><strong>Note:</strong> I had to manually enter the following statement. Without it the documentation wouldn't work.</p>
+<pre class="hljs"><code><div>    builder.Services.AddOpenApi();
+</div></code></pre>
+<p>We can access this documentation by:</p>
+<pre class="hljs"><code><div>    https://localhost:7040/openapi/v1.json
+</div></code></pre>
+<p><img src="assets/images/openapi-documentation.jpg" alt="OpenAPI Documentation" title="OpenAPI Documentation"></p>
+<p>It's not very readable for humans, but if we look closely, we can see it contains the definition for our category's endpoint. And the supported method, the tags, the possible responses.</p>
+<p>This documentation may be hard to read directly, but it is perfect for other tools. Tools that can read it, interpret it, and present a nicely formatted interface based on that data.</p>
+<p>And what makes it even better is that this documentation is updated automatically as we work on the API.</p>
+<p>When we add a new endpoint, it will appear here automatically the next time the application runs.</p>
+<h2 id="setting-up-scalar">Setting up Scalar</h2>
+<p>Scalar is a modern open-source API documentation tool that generates an interactive interface from the OpenAPI specification.</p>
+<p>Scalar reads from the OpenAPI document every time the app runs, it always reflects our current endpoints. There is nothing to update manually.</p>
+<p>You may also have heard of Swagger UI. For many years, it was the standard tool in the .NET ecosystem, included by default in every new Web API project.</p>
+<p>It did the same job, read the open API specification, and present an interactive interface in the browser. In .NET 9, Microsoft removed it from the default project templates, and Scalar became a natural replacement.</p>
+<p>It integrates with ASP.NET Core with just a few lines of code, and is available as a NuGet package.</p>
+<p>To install <strong>Scalar.AspNetCore</strong> use the Nuget Package Manager.</p>
+<p>But we can also use the CLI because it works the same way in Visual Studio Code.</p>
+<blockquote>
+<p>dotnet add package Scalar.AspNetCore</p>
+</blockquote>
+<p>Scalar is now installed, but we need to configure it.</p>
+<p>In <code>Program.cs</code>.</p>
+<p>At the top of the file, we need to add a <code>using</code> directive so that the Scalar extension methods are available.</p>
+<pre class="hljs"><code><div>    using Scalar.AspNetCore;
+</div></code></pre>
+<p>We don't need Scalar in production so add it to the <code>IsDevelopment()</code> section.</p>
+<pre class="hljs"><code><div>    // Configure the HTTP request pipeline.
+    <span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
+</div></code></pre>
+<p>Test it:</p>
+<blockquote>
+<p>https://localhost:7040/scalar/v1</p>
+</blockquote>
+<p><img src="assets/images/scalar-interface.jpg" alt="Scalar documentation" title="Scalar documentation"></p>
+<h2 id="using-scalar">Using Scalar</h2>
+<p>Scalar uses the <code>Categories</code> Tag that we set up to group all Categories endpoints.</p>
+<pre class="hljs"><code><div>    var group = app
+        .MapGroup(<span class="hljs-string">&quot;/api/categories&quot;</span>)
+        .WithTags(<span class="hljs-string">&quot;Categories&quot;</span>);
+</div></code></pre>
+<p>Relates to:</p>
+<p><img src="assets/images/categories-tag.jpg" alt="Categories Tag" title="Categories Tag"></p>
+<p>When we add <code>Books</code> endpoints they will be grouped next to Categories.</p>
+<h2 id="understanding-the-launchsettingsjson-file">Understanding the launchSettings.json file</h2>
+<p>The launch settings file configures the way our application starts, which URL it listens on, which environment it runs in, and whether it opens in browser automatically.</p>
+<p><code>launchSettings.json</code> is only used for development. We can change our settings to run Scalar when we run our API.</p>
+<p>Change <code>launchBrowser</code> to <code>true</code>.</p>
+<p>Add the <code>launchUrl</code> key with a value of <code>scalar/v1</code>.</p>
+<pre class="hljs"><code><div>    <span class="hljs-string">&quot;https&quot;</span>: {
+      <span class="hljs-string">&quot;commandName&quot;</span>: <span class="hljs-string">&quot;Project&quot;</span>,
+      <span class="hljs-string">&quot;dotnetRunMessages&quot;</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-string">&quot;launchBrowser&quot;</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-string">&quot;launchUrl&quot;</span>: <span class="hljs-string">&quot;scalar/v1&quot;</span>,
+      <span class="hljs-string">&quot;applicationUrl&quot;</span>: <span class="hljs-string">&quot;https://localhost:7040;http://localhost:5085&quot;</span>,
+      <span class="hljs-string">&quot;environmentVariables&quot;</span>: {
+        <span class="hljs-string">&quot;ASPNETCORE_ENVIRONMENT&quot;</span>: <span class="hljs-string">&quot;Development&quot;</span>
+      }
+    }
+</div></code></pre>
+<p>Now when you run the project it will launch the browser with Scalar.</p>
+<h3 id="run-your-project-in-visual-studio-code">Run your project in Visual Studio Code</h3>
+<p>We can run the API with:</p>
+<blockquote>
+<p>dotnet run --launch-profile https</p>
+</blockquote>
+<p>This is a long command and in VS Code we can change the command through the launchSettings.json file.</p>
+<p>Swap the <code>http</code> and <code>https</code> sections around so the <code>https</code> section is on top. Now use:</p>
+<blockquote>
+<p>dotnet run</p>
+</blockquote>
+<p><strong>Note:</strong> Also change the sections in Visual Studio as well if you want to run the API from the command line. You also have to enter the &quot;scalar/v1&quot; section to your Url to get it to work.</p>
+
+</body>
+</html>
