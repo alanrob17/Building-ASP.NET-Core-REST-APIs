@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>08-REST-APIs.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="rest-apis">Rest APIs</h1>
+<h2 id="rest">REST</h2>
+<p><strong>REST</strong> stands for Representational State Transfer.</p>
+<p>It is a set of architectural principles for building networked systems.</p>
+<p>REST is not a protocol it's an architectural style.</p>
+<p><img src="assets/images/rest.jpg" alt="REST" title="REST"></p>
+<p>REST is a set of guidelines that describe how a well-designed system should behave.</p>
+<p>Following these principles leads to APIs that are predictable, easy to use, and easy to maintain.</p>
+<h3 id="core-principles">Core principles</h3>
+<h4 id="1-client-server-separation">1. Client-Server separation</h4>
+<p><img src="assets/images/client-server-separation.jpg" alt="Client - Server separation" title="Client - Server separation"></p>
+<p>The client and the server are <strong>independent</strong> from each other.</p>
+<p>The client, which could be a web browser, a mobile app, or another service, doesn't know how the server stores or manages its data.</p>
+<p>The server doesn't know how the client displays or processes what it receives.</p>
+<p>They communicate only through the <strong>API</strong>.</p>
+<p>This separation means we can change the front-end without touching the back-end, and vice versa. It keeps things modular and maintainable.</p>
+<h4 id="2-statelessness">2. Statelessness</h4>
+<p>It is one of the most important ideas in REST, and it has real consequences for how we design our APIs.</p>
+<p><img src="assets/images/statelesness.jpg" alt="Statelessness" title="Statelessness"></p>
+<p>Statelessness means that every request from the client to the server must contain all the information needed to process that request.</p>
+<p>The server <strong>does not</strong> store any session state between requests. It <strong>does not</strong> remember who you are from one request to the next.</p>
+<p>For example, when implementing authentication in our APIs, we often use <code>JWT tokens</code>, which are compact strings that carry information about the user in a self-contained format.</p>
+<p>Every time a client makes a request to a protected endpoint, it must send that token along with the request. The server doesn't remember that the client was logged in. It checks the token each time.</p>
+<p>That's statelessness in practice.</p>
+<p>This might sound like a limitation, but it's actually what makes REST APIs scalable because the server holds no session state, any server in a cluster can handle any request. There's no need to route a client to the same server every time.</p>
+<h4 id="3-uniform-interface">3. Uniform interface</h4>
+<p>This is the most characteristic feature of REST, and it's what makes REST APIs feel intuitive.</p>
+<p><img src="assets/images/uniform-interface.jpg" alt="Uniform interface" title="Uniform interface"></p>
+<p>A uniform interface means that the API behaves in a consistent, predictable way.</p>
+<p>If you understand the pattern, you can use the API without reading every page of documentation.</p>
+<p>The things our API exposes, are identified by URLs and the action we want to perform is expressed through the HTTP method.</p>
+<p>For example in our endpoint:</p>
+<p><code>/api/categories</code> is the Resource URL.</p>
+<p><code>GET</code> is the HTTP method and describes what we want to do with the resource.</p>
+<p><img src="assets/images/uniform-interface-2.jpg" alt="Uniform interface" title="Uniform interface"></p>
+<p>Some more examples:</p>
+<p><img src="assets/images/uniform-interface-3.jpg" alt="Uniform interface" title="Uniform interface"></p>
+<p>This is the core of a RESTful interface design.</p>
+<h4 id="4-layered-system">4. Layered system</h4>
+<p>The client doesn't need to know whether it's communicating directly with the server that
+handles its request, or whether there are other layers in between.</p>
+<p><img src="assets/images/layered-system.jpg" alt="Layered system" title="Layered system"></p>
+<p>The client doesn't know that the Resource it has requested could be going directly or is being sent to a load balancer, a caching layer, or a security gateway.</p>
+<p>This makes it easy to add infrastructure around our API without changing the API itself.</p>
+<p>Luckily for us, this is something that many web frameworks handle for us. For example, in ASP.NET, this principle shows up in the middleware pipeline.</p>
+<p>When a request comes in, it passes through a series of middleware components. One handles authentication, another error logging, another response compression. Each component does its job and passes the request along.</p>
+<p>The client knows nothing about this chain, and adding or removing a middleware layer doesn't affect the others.</p>
+<h4 id="5-cacheability">5. Cacheability</h4>
+<p>Caching means storing a copy of a response so that the same data can be returned again without repeating the work of generating it.</p>
+<p><img src="assets/images/cacheablity.jpg" alt="Cacheability" title="Cacheability"></p>
+<p>Instead of hitting the database and running the same query every time, the result is saved on the server, on the client, or somewhere in between and reused until it's no longer valid.</p>
+<p>The REST principle says that responses should indicate whether this is allowed.</p>
+<p>If a client asks for the same data repeatedly, and that data hasn't changed, caching it means the server doesn't have to process the same request over and over. This improves performance and reduces load.</p>
+<p><code>HTTP</code> has built-in mechanisms for this. Headers like Cache Control and ETag. And many API frameworks support them out of the box. In practice, <code>GET</code> requests for stable data are good candidates for caching.</p>
+<p>A request that retrieves an author's biography doesn't need to hit the database every single time.</p>
+<p>Requests that modify data, <code>POST</code>, <code>PUT</code>, <code>DELETE</code> are never cached.</p>
+<p>Not every API that calls itself a REST API actually follows all the principles. And that's fine. In real-world development, you apply these guidelines with judgment.</p>
+<p>The goal is to build an API that is consistent, predictable, and easy to work with.</p>
+<h2 id="http-response-codes">HTTP Response codes</h2>
+<p>Every <code>HTTP</code> response includes a three-digit status code. This code tells the client, whether that's a browser, a mobile app, or a tool like Scaler or Postman, what happened with its request.</p>
+<p>These codes follow a well-defined standard, and understanding that standard will make us much better at designing APIs that communicate clearly with their clients.</p>
+<p>The first digit alone already tells us a lot. HTTP status codes are organized into five categories, each starting with a different digit.</p>
+<p>Let's go through them one by one.</p>
+<p>Codes in the 100 range are <strong>Informational</strong>.</p>
+<p><img src="assets/images/informational.jpg" alt="Informational" title="Informational"></p>
+<p>They tell the client that the request was received and processing is continuing. In practice, we almost never deal with these in REST API development. They are handled at a lower level, by the HTTP infrastructure.</p>
+<p>You likely never return a 100 code yourself.</p>
+<p>Codes in the 200 range mean the request was received, understood, and processed successfully. These are the codes we return when things go well.</p>
+<p><strong>200 OK</strong> is the most common success code.</p>
+<p><img src="assets/images/successful.jpg" alt="Successful" title="Successful"></p>
+<p>It's the general purpose, everything worked response. When a client requests a list of persons and we return it, that's a 200. When a client asks for a specific person and we find them, that's a 200.</p>
+<p><strong>201 CREATED</strong> is more specific.</p>
+<p>We use it when a request results in a new resource being created.</p>
+<p><img src="assets/images/successful-created.jpg" alt="Successful-Created" title="Successful-Created"></p>
+<p>So when a client sends a <strong>POST</strong> request to add a new person and we successfully save them to the database, we should return 201, not 200. The distinction matters because it communicates intent. The client now knows a new resource exists.</p>
+<p><strong>204 NO CONTENT</strong> means the request was successful, but there is nothing to return in the response body.</p>
+<p><img src="assets/images/success-no-content.jpg" alt="Successful - No content" title="Successful - No content"></p>
+<p>The typical example is a <code>DELETE</code> request. When a client deletes a person, the operation succeeds, but there is no data to send back so we return 204, success with an empty body.</p>
+<p>Codes in the 300 range tell the client that it needs to take an additional step, usually go to a different URL, to complete the request.</p>
+<p>The most common ones are 301 MOVED PERMANENTLY and 302 FOUND, sometimes called a TEMPORARY REDIRECT.</p>
+<p>These are used more in traditional web applications than in REST APIs. When building an API, we generally don't redirect clients ee just return data.</p>
+<p>So like the 100 range, you will not use 300 codes often in your API.</p>
+<p><strong>400 CLIENT ERRORS</strong> mean the request had a problem and the problem was on the client's side.</p>
+<p>The server received the request, understood it, but couldn't process it because something was wrong with what the client sent.</p>
+<p><strong>400 BAD REQUEST</strong> is the general, something is wrong with your request, response.</p>
+<p><img src="assets/images/client-error.jpg" alt="Client error" title="Client error"></p>
+<p>We use this when the client sends data that fails validation. For example, trying to create a person without a name or providing an email address in the wrong format.</p>
+<p><strong>401 UNAUTHORIZED</strong> is returned when a client tries to access a protected endpoint without valid credential.</p>
+<p><img src="assets/images/unauthorised.jpg" alt="Unauthorised" title="Unauthorised"></p>
+<p>It means, I don't know who you are, please provide credentials. But wait a minute, authentication is about identity, who you are Authentication is about permissions.</p>
+<p>So why is it called unauthorized if it's really about authentication? Well, that's the thing the name is misleading and it has led more than a few engineers into some very confusing debugging sessions.</p>
+<p><strong>403 FORBIDDEN</strong> is different from 401.</p>
+<p>Here we know who the client is and they are authenticated, but they don't have permissions to perform this action.</p>
+<p><img src="assets/images/forbidden.jpg" alt="Forbidden" title="Forbidden"></p>
+<p>For example, a regular user trying to delete another person's account would get a 403 because that operation is restricted to administrators.</p>
+<p><strong>404 Not Found</strong> means that the requested resource doesn't exist.</p>
+<p><img src="assets/images/not-found.jpg" alt="Not Found" title="Not Found"></p>
+<p><strong>409 CONFLICT</strong> is used when the request can't be completed because it conflicts with the current state of the resource. For example, if a client tries to register with an email address that already exists in the system, that's a conflict.</p>
+<p>The request is valid, but the current state of the data prevents it.</p>
+<p>Codes in the <strong>500 range</strong> mean something went wrong on the server's side.</p>
+<p><img src="assets/images/server-error.jpg" alt="Server error" title="Server error"></p>
+<p>The request from the client may have been perfectly valid, but the server just failed to handle it.</p>
+<p><strong>500 INTERNAL SERVER ERROR</strong> is the general purpose code.</p>
+<p><img src="assets/images/internal-server-error.jpg" alt="Internal Server error" title="Internal Server error"></p>
+<p>It means something unexpected happened. One unhandled exception, a database connection failure, a bug in the code. We never want to return this intentionally. It's the code that appears when we haven't handled something properly. If it happens, it means us, the developers, have some work to do.</p>
+<p><strong>503 SERVICE UNAVAILABLE</strong> means the server is temporarily unable to handle requests.</p>
+<p><img src="assets/images/service-unavailable.jpg" alt="Service unavailable" title="Service unavailable"></p>
+<p>For example, because it's overloaded or downed for maintenance. Not something we return to directly in our application logic, but good to know what it means when you see Internal in it.</p>
+<h3 id="http-response-codes-summary">HTTP Response codes summary</h3>
+<p>Every time we build an endpoint, we should think about what the correct response code should be for each possible outcome.</p>
+<p>Success, validation error, missing resource, and so on. One last thing. Using the right status code is not just about following rules it's about making our API easy to work with.</p>
+<p>When a client receives a response, the status code is the first thing it sees, before it even looks at the response body.</p>
+<p>A well-designed API communicates clearly through its status codes. And that makes life easier for anyone who builds on top of it.</p>
+
+</body>
+</html>
