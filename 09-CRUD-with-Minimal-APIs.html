@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>09-CRUD-with-Minimal-APIs.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="crud-with-minimal-apis">CRUD with Minimal APIs</h1>
+<h2 id="get-by-id-route-parameter-binding">GET by ID Route parameter binding</h2>
+<p>Let's define an endpoint that will return a specific <code>Category</code> by its ID and  we will understand what <strong>root parameter binding</strong> is.</p>
+<p>The endpoint we have so far returns all categories, which is why when using it, we don't pass any additional information.</p>
+<p>Let's now add an endpoint that returns a single <code>Category</code>.</p>
+<p>To do that, it will need to receive a category ID. Let's add a handler method for that. It will take this ID as a parameter. Let's search for this category in our collection.</p>
+<pre class="hljs"><code><div>private static async Task&lt;IResult&gt; GetById(int <span class="hljs-built_in">id</span>)
+{
+    var category = _categories.FirstOrDefault(c =&gt; c.Id == <span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (category == null)
+    {
+        <span class="hljs-built_in">return</span> Results.NotFound();
+    }
+    <span class="hljs-built_in">return</span> Results.Ok(category);
+}
+</div></code></pre>
+<p>When writing endpoints, as with all things in programming, we should always think about edge cases. Here, it is possible that a category with a given ID does not exist in our storage.</p>
+<p>In that case, we should communicate it with 404 response code, not found.</p>
+<p>We can use a helper method from the <code>Results</code> class to do that.</p>
+<p><code>Not found</code> does not take any arguments, because there is nothing to return to the client.</p>
+<p>If the category has been found, we can return a successful result.</p>
+<p>Let's not forget to register this endpoint. This is an important part.</p>
+<pre class="hljs"><code><div> public static void MapCategoriesEndpoints(this IEndpointRouteBuilder app)
+ {
+     var group = app
+         .MapGroup(<span class="hljs-string">&quot;/api/categories&quot;</span>)
+         .WithTags(<span class="hljs-string">&quot;Categories&quot;</span>);
+
+     group.MapGet(<span class="hljs-string">&quot;/{id}&quot;</span>, GetById); // register the endpoint
+     group.MapGet(<span class="hljs-string">&quot;/&quot;</span>, GetAll);
+}
+</div></code></pre>
+<p>We are telling the framework that <code>GetById</code> should be called when someone sends a request to <code>/api/{id}</code>.</p>
+<p>The curly braces tell the framework that this segment of the URL is a <strong>parameter</strong>, and it should be mapped to the parameter with the same name in the <code>GetById</code> method.</p>
+<p>The name inside the curly braces <strong>must match</strong> the parameter name in the method exactly.</p>
+<p>That is how the framework knows which value to map. This mechanism is called <strong>root-parameter binding</strong>.</p>
+<p>First send a request for a category that doesn't exist.</p>
+<blockquote>
+<p>/api/categories/5</p>
+</blockquote>
+<p>We can see that Scalar gives us the ability to set the value of the ID parameter directly. When we do that, it will automatically include it in the path in the correct place.</p>
+<p>We get <strong>404 not found</strong> as expected. There is no category with ID 5 in our storage.</p>
+<p>Let me now try ID 1, which should return a result.</p>
+<blockquote>
+<p>/api/categories/1</p>
+</blockquote>
+<p>This time we get a single object, not a collection. Because this endpoint returns only one category.</p>
+<h2 id="route-constraints">Route constraints</h2>
+<p>We will now see what root constraints are and how we can use them to control how roots are matched to endpoints.</p>
+<p>Let's look at an issue with our present code.</p>
+<p>Our endpoint takes a category ID as a parameter. But what happens if we pass something other than an int?</p>
+<p><img src="assets/images/bad-request.jpg" alt="Bad request" title="Bad request"></p>
+<p>We get a <code>400 bad requests</code>.</p>
+<p>Which might even make sense, this request is definitely invalid, since we are passing a <code>string</code> where an <code>int</code> is expected.</p>
+<p>But what is more concerning is the message we see in the response. <em>Failed to bind parameter</em>. This message comes from the parameter binding process.</p>
+<p>While it can be useful during development, it is not something we typically want to expose to clients in a production API.</p>
+<p>What is also worth noticing is that Scalar hasn't warned us in any way that we are passing
+an invalid value.</p>
+<p>We haven't specified this at the routing level, and Scalar cannot see our C# code, where we write that this parameter is an int.</p>
+<p>The good news is that we can fix that easily, using a mechanism called <strong>root constraints</strong>.</p>
+<blockquote>
+<p>group.MapGet(&quot;/{id}&quot;, GetById);</p>
+</blockquote>
+<p>We can change this to:</p>
+<blockquote>
+<p>group.MapGet(&quot;/{id:int}&quot;, GetById); // add the int type</p>
+</blockquote>
+<p>Run this again and the first thing we notice is that Scalar now shows us a warning. We can click on it to see more details.</p>
+<p>Most documentation tools that consume OpenAPI are able to interpret root constraints and show the user information about the expected parameter type.</p>
+<p>This time we get <code>404 not found</code>, because we are not able to find an endpoint matching the root we used.</p>
+<p><img src="assets/images/route-constraint.jpg" alt="Route constraint" title="Route constraint"></p>
+<p>This time we don't see any internal error messages. So this is one benefits of root constraints we get cleaner documentation and more accurate error responses.</p>
+<p>To understand the other benefits, we need to look at how root constraints work internally.</p>
+<p>Without a root constraint, <strong>all of these requests</strong> will reach the endpoint.</p>
+<p>We will encounter a problem only at the moment of parameter binding resulting in a <code>400 bad request</code>.</p>
+<p>With root constraint, we clearly state that only routs with an int parameter can be matched to our endpoint.</p>
+<p><img src="assets/images/parameter-binding.jpg" alt="Parameter binding" title="Parameter binding"></p>
+<p>For all other values, the endpoint is never reached, and the parameter binding process never starts.</p>
+<p>There is one more benefit worth mentioning. It is possible to have two endpoints that handle what looks like the same root, distinguished only by the parameter type.</p>
+<p>For example, imagine that for some reason our categories have not only a regular integer ID, but also a GUID, and we want a separate endpoint for each.</p>
+<p><img src="assets/images/two-endpoints.jpg" alt="Multiple endpoints" title="Multiple endpoints"></p>
+<p>Root constraints make this possible. The correct handler is chosen based on the parameter type.</p>
+<h3 id="list-of-route-constraints">List of route constraints</h3>
+<p><img src="assets/images/list-of-constraints.jpg" alt="List of constraints" title="List of constraints"></p>
+<h2 id="documenting-response-types-with-produces">Documenting response types with Produces</h2>
+<p>Let's now see how we can improve our API's documentation by adding information about what response types the endpoints can return. We will do that by learning about the <strong>Produces</strong> method.</p>
+<p>We will start by identifying the problem.</p>
+<p>Here is the documentation of our API in Scalar, specifically the endpoint that returns a category by ID.</p>
+<p><img src="assets/images/documentation-fix.jpg" alt="Documentation limitations" title="Documentation limitations"></p>
+<p>Here we can see the description of what this endpoint may produce.</p>
+<p>It says it produces 200 OK. This sounds great, but it is not entirely true. It can also produce a  404 not found, if a category with the given ID does not exist in storage.</p>
+<p>Moreover, here it says this endpoint returns a response with no body, which is not true at all. It returns a category if it is found.</p>
+<p>It would be nice to include this in the documentation, so it is honest and complete.</p>
+<p>One way to do this in minimal APIs is with the <strong>Produces</strong> method.</p>
+<pre class="hljs"><code><div>    group.MapGet(<span class="hljs-string">&quot;/{id:int}&quot;</span>, GetById)
+        .Produces&lt;Category&gt;(200)
+        .Produces(404);
+</div></code></pre>
+<p>This method is chained after the Mapping call, and it describes what this endpoint may Produce.</p>
+<p>We can call it as many times as we need, specifying all the HTTP status codes that can possibly be returned.</p>
+<p>If a response carries a body, like in the case of <code>200 OK</code>, we also specify its type as a type parameter (<code>Category</code>).</p>
+<p>By the way, using fixed numbers like this is an <strong>anti-pattern</strong> called a magic number.</p>
+<p>We are using numeric literals without any description of what they mean. We can fix that by using the built-in StatusCodes class.</p>
+<pre class="hljs"><code><div>    group.MapGet(<span class="hljs-string">&quot;/{id:int}&quot;</span>, GetById)
+        .Produces&lt;Category&gt;(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound);
+</div></code></pre>
+<p>One last thing worth mentioning. <strong>Produces</strong> is specific to minimal APIs.</p>
+<p>When we use controllers, we will achieve the same result using <strong>attributes</strong> instead. Run the API and check the results.</p>
+<p><img src="assets/images/documentation-fix.jpg" alt="Documentation limitations" title="Documentation limitations"></p>
+<p>We can now clearly see that this endpoint may return either 200 OK or 404 not found. We also see the body for both cases.</p>
+<p><strong>Produces</strong> is purely a documentation method. It is useful in its own right, but it lives outside the actual endpoint handler.</p>
+<h2 id="type-safe-responses-in-minimal-apis">Type-safe responses in Minimal APIs</h2>
+<p>Let's now see how we can define our endpoints in a way that they return <em>strongly typed results</em>.</p>
+<p>We will do that with the help of <strong>TypedResults</strong> class.</p>
+<p>Let's start with the endpoint that returns the collection of all <code>Categories</code>.</p>
+<p>The only expected response type here is 200 OK because even if we have no categories in storage, we should still return an empty collection which is a perfectly valid result.</p>
+<p>Still, even if this response code is shown in Scalar, the response body is not.</p>
+<p>We could fix that with produces, but let's approach it differently.</p>
+<p>Instead of the very general <strong>IResult</strong>, we want to declare explicitly what this endpoint will produce.</p>
+<pre class="hljs"><code><div>    private static async Task&lt;Ok&lt;List&lt;Category&gt;&gt;&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+    {
+        var categories = _categories;
+        <span class="hljs-built_in">return</span> TypedResults.Ok(categories);
+    }
+</div></code></pre>
+<p>This is some serious nesting, so let's understand it step by step.</p>
+<p>We return a <em>Task</em>, just as before. The result of this <strong>Task</strong> will be of type <code>OK</code>.</p>
+<p>A specific type representing an HTTP response with the status <code>200 OK</code>. Inside it, we declare the type of the response payload. In our case, a <strong>List</strong> of Categories.</p>
+<p>You might notice that we are using <code>List</code> rather than a more general type, like <code>IEnumerable</code>.</p>
+<p>In regular C# code, returning a more general type is often the better choice. It hides implementation details and gives more flexibility. However, in the context of an API endpoint the <strong>List</strong> type never reaches the client. It gets serialized into JSON before leaving the server.</p>
+<p>The client has no idea what type we used internally. That's why we can safely use a <em><strong>List</strong></em> here.</p>
+<p>We also need to change how we produce the result. So far, we have been using the <strong>Results</strong> class.</p>
+<p>We will now switch to <strong>TypedResults</strong>, which works in a similar way, but returns specific, strongly typed result objects instead of the general <strong>IResult</strong> interface.</p>
+<p>This is how the Scalar documentation looks:</p>
+<p><img src="assets/images/documented-categories.jpg" alt="Documentation for Categories" title="Documentation for Categories"></p>
+<p>Let's now look at the second endpoint. The one returning a <code>Category</code> by ID.</p>
+<p>Here the situation is a bit more complex, because we have two possible outcomes. Either 200 OK or 404 Not Found.</p>
+<p>To reflect that in the return type, we use a special generic type called <strong>Results</strong>, which accepts multiple type parameters.</p>
+<p>One for each possible response type the endpoint can return.</p>
+<pre class="hljs"><code><div>    private static async Task&lt;Results&lt;Ok&lt;Category&gt;, NotFound&gt;&gt; GetById(int <span class="hljs-built_in">id</span>)
+    {
+        var category = _categories.FirstOrDefault(c =&gt; c.Id == <span class="hljs-built_in">id</span>);
+        <span class="hljs-keyword">if</span> (category == null)
+        {
+            <span class="hljs-built_in">return</span> TypedResults.NotFound();
+        }
+        <span class="hljs-built_in">return</span> TypedResults.Ok(category);
+    }
+</div></code></pre>
+<p>Once again, we return a Task. The result of this Task will be of this generic type. A special type that can represent more than one possible HTTP response.</p>
+<p>We simply list the possible response types one after another as <strong>type parameters</strong>.</p>
+<p>In our case, the response is either 200 OK with a category as the payload, or 404 Not Found with no payload.</p>
+<p>Whoever reads this code can see what responses this endpoint can produce.</p>
+<p>There is another benefit here. If we try to return a response type that we didn't declare, we will get a compilation error. The code does not compile.</p>
+<p>We declared that the 200 OK response carries a Category, but we are trying to return a plain string instead. The compiler caught that mismatch. This is exactly the kind of safety net that <strong>IResult</strong> cannot give us.</p>
+<p>Since the method itself now documents what response types it can produce, we could probably get rid of the <strong>Produces</strong> clause. Technically, yes, but we will soon see that <strong>Produces</strong> still has its uses.</p>
+<p>Why does the produces method exist at all? Well, there are two common use cases.</p>
+<p>The first is when working with code that already uses <strong>IResult</strong> and cannot easily be changed.</p>
+<p>In that case, produces is still useful for documenting what an endpoint can return.</p>
+<p>The second use case is when, instead of specific response types like NotFound, we decide to return the more general type called <strong>ProblemHttpResult</strong>.</p>
+<h2 id="model-binding">Model Binding</h2>
+<p>We need to understand what module binding is.</p>
+<p>Let's start by registering a new endpoint.</p>
+<pre class="hljs"><code><div>    group.MapPost(<span class="hljs-string">&quot;/&quot;</span>, Create);
+</div></code></pre>
+<p>There is no path parameter here. The <strong>Post</strong> endpoint uses the base path for categories, which is <code>POST api/categories</code>.</p>
+<p>It is the <strong>HTTP</strong> verb that distinguishes this request from a <strong>GET</strong> to the same address.</p>
+<p>Now define the <code>Create</code> handler method.</p>
+<pre class="hljs"><code><div>    private static async Task&lt;&gt; Create(Category category)
+    {
+
+    }
+</div></code></pre>
+<p>I have left the return type empty for now.</p>
+<p>The method takes a <code>Category</code> object as a parameter. But how does that object get populated with data from the request? This is where <strong>model binding</strong> comes in.</p>
+<p><strong>Model binding</strong> is a mechanism by which ASP.NET Core automatically maps incoming request data to method parameters. It can pull data from different parts of the request. The <strong>root</strong>, the <strong>query stream</strong>, the <strong>headers</strong> or the <strong>body</strong>.</p>
+<p><img src="assets/images/mapping-data.jpg" alt="Mapping data" title="Mapping data"></p>
+<p>Unlike <strong>GET</strong> requests, <strong>POST</strong> requests carry a <strong>body</strong>, a <strong>payload</strong> with the data we want to  send to the server.</p>
+<p>In this case, since our parameter is a complex object, the framework knows to look for it in the body and will automatically deserialize it from JSON into a C# object.</p>
+<p>Actually, we have already seen model binding in action, when we extracted the ID from a URL like this.</p>
+<blockquote>
+<p>GET api/categories/5</p>
+</blockquote>
+<p>That was model binding as well. The framework took that value from the <strong>root</strong> and mapped it directly to the ID parameter in our handler.</p>
+<p>For the <strong>POST</strong> request, model binding will take the value from the request <strong>body</strong>.</p>
+<p>The other option we have is to get data from a <strong>query</strong>.</p>
+<p><img src="assets/images/from-query.jpg" alt="Data from query" title="Data from query"></p>
+<h2 id="post">POST</h2>
+<p>Let's now implement the <strong>POST</strong> endpoint.</p>
+<p>We will also see two new response types in action, <strong>Created</strong> and <strong>Conflict</strong>.</p>
+<p>Additionally, we will learn in what order validation checks should be placed in a handler method, and why this order matters.</p>
+<p>Let's think about the possible responses. If everything goes well, we should return <code>201 Created</code>.
+This response carries a payload, the newly created object.</p>
+<p>But we also need to handle edge cases. In this case, three may occur.</p>
+<p>The first is that someone sends us a <code>Category</code> with an ID that already exists in our storage.
+In that case, the correct response is <code>409 Conflict</code>. The incoming request is conflicting with the current state of our system.</p>
+<p>We are currently assuming that the client sends the entire Category object, including the ID. In future the database will automatically generate this for us.</p>
+<p>At that point, we can remove this check entirely and update the endpoint so that the client only sends the name.</p>
+<p>For now, while we are using an in-memory list, this approach is acceptable.</p>
+<p>The second possible problem is that someone sends us a category with a name that is already taken. Category names should be unique. There is no reason to have two Categories called Biography.</p>
+<p>This is also a Conflict with the current state of our data so again, <code>409 Conflict</code> is the right response.</p>
+<p>The third possible problem is that someone sends us a <code>Category</code> with an empty <code>Name</code>. That is not acceptable and we should respond with <code>400 Bad Request</code>.</p>
+<p>So we have three possible response types. Let's add them:</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Created&lt;Category&gt;, Conflict, BadRequest&gt;&gt; Create(Category category)
+{
+
+}
+</div></code></pre>
+<p>Next check for existing items in our <code>Category</code> object.</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Created&lt;Category&gt;, Conflict, BadRequest&gt;&gt; Create(Category )
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(category.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.BadRequest();
+    }
+
+    <span class="hljs-keyword">if</span> (_categories.Any(existingCategory =&gt; existingCategory.Id == category.Id))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Conflict();
+    }
+
+    <span class="hljs-keyword">if</span> (_categories.Any(existingCategory =&gt; existingCategory.Name.Equals(category.Name, mparison.OrdinalIgnoreCase)))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Conflict();
+    }
+
+}
+</div></code></pre>
+<p>Notice the order of those checks. We start with the lightweight ones. Things we can validate instantly without touching the database. Like checking whether the name is empty.</p>
+<p>Only once those pass, we perform the heavier checks that require a database call.</p>
+<p>This way, if the input is invalid for a simple reason, we reject it immediately without making an unnecessary trip to the database. It is a good practice and an easy performance gain.</p>
+<p>If none of those problems occur, we can safely add the new category to our storage.</p>
+<pre class="hljs"><code><div>    ...
+    _categories.Add(category);
+    ...
+</div></code></pre>
+<p>We must also return a <strong>Response</strong>, but this will be a bit more complicated.</p>
+<h2 id="the-response-from-post">The response from POST</h2>
+<p>Let's think about what to return in the Success case.</p>
+<p>In REST APIs, when a resource is successfully created, we typically respond with two pieces of information.</p>
+<p>The <strong>address</strong> at which the new resource can be accessed and the newly <strong>created item</strong> itself.</p>
+<p>The address goes into a response header called <strong>Location</strong>. That is the standard place for it. The item itself goes into the <strong>response body</strong>.</p>
+<p>Right now this may seem redundant, since the item is exactly what the client sent us. But once we introduce a database, the client will only send a name and we will respond with the complete <code>Category</code> object, including the generated ID.</p>
+<p>We can use the <code>TypedResults</code> class to build this response.</p>
+<p>The first method that may seem adequate is <code>Created()</code>.</p>
+<p>The second argument is the newly created item.</p>
+<p>The first is the URL when the new resource can be accessed.</p>
+<p>Our <strong>GetById</strong> endpoint.</p>
+<p>But here is the problem. In REST APIs, we should return a complete, absolute URL, including the base address. That would mean hardcoding the address. This is hard to maintain.</p>
+<p>That's why it is better to use the <code>CreatedAtRoot()</code> method.</p>
+<pre class="hljs"><code><div>    ...
+    _categories.Add(category);
+    
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(category,
+        <span class="hljs-string">&quot;GetCategoryById&quot;</span>,
+        new { <span class="hljs-built_in">id</span> = category.Id });
+</div></code></pre>
+<p>The first argument is the newly created object we want to return in the response body.</p>
+<p>The second is the name of the root that points to the <code>GetById</code> endpoint.</p>
+<p>The framework will use it to build the full URL automatically, no matter what environment the application is running on.</p>
+<p>The third argument provides the root values needed to build that URL. In this case, the ID of the newly created <code>Category</code>.</p>
+<p>Since we are using the <code>CreatedAtRoot</code> method, we must also update the return type.</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;Category&gt;, Conflict, BadRequest&gt;&gt; Create(Category category)
+{
+    ...
+</div></code></pre>
+<p>We haven't named our root yet, so we still need to do that. Let's now name the root related to the <code>GetById</code> endpoint.</p>
+<p><strong>WithName</strong> assigns a name to this root, making it possible to reference it from other parts of the application, including <code>CreatedAtRoot</code>, which we just used.</p>
+<p>Without this name, the framework would not know which endpoint to use when building the
+URL for the location header.</p>
+<pre class="hljs"><code><div>    group.MapGet(<span class="hljs-string">&quot;/{id:int}&quot;</span>, GetById)
+        .WithName(<span class="hljs-string">&quot;GetCategoryById&quot;</span>);
+</div></code></pre>
+<p>Let's test our post endpoint.</p>
+<p>In Scalar we can add our <code>Category</code> object directly into the request body JSON.</p>
+<p>Start with testing for errors.</p>
+<p>Add an existing ID and a new Name:</p>
+<p><img src="assets/images/bad-id.jpg" alt="409 Conflict" title="409 Conflict"></p>
+<p><strong>409 Conflict</strong>, exactly what we expected.</p>
+<p>Add a new ID and an existing Name:</p>
+<p><img src="assets/images/bad-name.jpg" alt="409 Conflict" title="409 Conflict"></p>
+<p><strong>409 Conflict</strong> again.</p>
+<p>Now test with no Name:</p>
+<p><img src="assets/images/no-name.jpg" alt="400 Bad Request" title="400 Bad Request"></p>
+<p><strong>400 Bad Request</strong> as expected.</p>
+<p>Finally, let me send a valid request. 201 Created:</p>
+<p><img src="assets/images/successful-request.jpg" alt="Successful request" title="Successful request"></p>
+<p>A new category has been created and returned in the response body. Notice that the URL where it can be accessed is not in the body.</p>
+<p>It is the part of the response headers:</p>
+<p><img src="assets/images/location.jpg" alt="Location" title="Location"></p>
+<p>We can use it to make sure the new category has been added. Run the Url in the browser.</p>
+<p><img src="assets/images/browser-results.jpg" alt="Browser results" title="Browser results"></p>
+<p>Now, because we are using an in-memory database the extra Category record will only work until we re-compile and then it will disappear. A database will fix this issue.</p>
+<p><strong>Note:</strong> If you run this <code>POST</code> request with the same data again you will get a <strong>409 Conflict</strong> response.</p>
+<h2 id="problem-details">Problem Details</h2>
+<p>Let's now learn about <strong>problem details</strong>, a standardised way to return error responses from an API.</p>
+<p>We now have the POST endpoint working, and as we saw, it correctly handles three problematic situations.</p>
+<p>We get the right response codes, but there is a problem.</p>
+<p>Let's look at the conflicting ID case as an example. As you can see, this response gives the client absolutely no details. Anyone calling this API would have no idea what the conflict is about.</p>
+<p>In a real application, the client needs to know what the problem is, to display a meaningful
+message to the user, to understand what went wrong and how to fix it. A status code alone is not enough.</p>
+<p>The solution is to use problem details. This is a format for error responses, defined by RFC 9457.</p>
+<p>It is not specific to .NET in any way, and ideally, should be followed by any kind of web API.</p>
+<p>It defines a JSON structure with several fields.</p>
+<p>The most important ones, which you will want to include in almost every error response,
+are status for the HTTP code and detail for a human-readable explanation of what went wrong.</p>
+<p>There are also optional fields like type, title, and instance. This standard also requires a specific <strong>content type</strong> header, <code>application/problem+JSON</code>, so that client can recognize the response as a problem details object, rather than just any JSON payload.</p>
+<p>The fields we will use are status and detail (we will ignore the others).</p>
+<p><img src="assets/images/problem-details.jpg" alt="Problem details" title="Problem details"></p>
+<h2 id="updating-endpoints-to-produce-problem-details">Updating endpoints to produce Problem Details</h2>
+<p>Let's now update our endpoints so that they produce problem details.</p>
+<p>Previously, we learned about RFC 9457 standard and why it matters, and that it requires error responses to carry a problem details object.</p>
+<p>The good news is that .NET supports this out-of-the-box true <code>TypedResults</code> problem. Let's use it!</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;Category&gt;, ProblemHttpResult&gt;&gt; Create(Category category)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(category.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (_categories.Any(existingCategory =&gt; existingCategory.Id == category.Id))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with Id {category.Id} already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    <span class="hljs-keyword">if</span> (_categories.Any(existingCategory =&gt; existingCategory.Name.Equals(category.Name, StringComparison.OrdinalIgnoreCase)))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{category.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    _categories.Add(category);
+
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(category, <span class="hljs-string">&quot;GetCategoryById&quot;</span>, new { <span class="hljs-built_in">id</span> = category.Id });
+}
+</div></code></pre>
+<p>We changed <code>TypedResults.Conflict</code> or <code>TypedResults.BadRequest</code> to <code>TypedResultsProblem</code>. This allows us to add <strong>detail</strong>, an error message and a <strong>statusCode</strong> to provide a more detailed description of what went wrong.</p>
+<p>We need to change the return type in the method statement from <strong>Conflict, BadRequest</strong> to <strong>ProblemHttpResult</strong>.</p>
+<p>Let's test this in Scalar.</p>
+<p><img src="assets/images/problem-details-response.jpg" alt="Problem details response" title="Problem details response"></p>
+<p>Now we get a more detailed description in the <strong>Response Body</strong>.</p>
+<p>Notice the Content Type in the Response Header is now: <code>application/problem-json</code>.</p>
+<p>We get this automatically simply because we used ProblemHttpResult as the return type.</p>
+<p>There is one problem, however. Let's look at the endpoint documentation.</p>
+<p>It no longer declares that it may return <strong>409 Conflict</strong> or <strong>400 Bad Request</strong>.</p>
+<p>Luckily, there is a way to bring it back, using the <strong>ProducesProblem</strong> method we saw before.</p>
+<p>Here we explicitly declare all possible responses for this endpoint.</p>
+<pre class="hljs"><code><div>    group.MapPost(<span class="hljs-string">&quot;/&quot;</span>, Create)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+</div></code></pre>
+<p>The responses are now documented correctly.</p>
+<p><img src="assets/images/proper-responses.jpg" alt="Proper responses" title="Proper responses"></p>
+<p>This is a good example of the kind of trade-offs we face every day when building APIs.</p>
+<p><img src="assets/images/tradeoffs.jpg" alt="API Tradeoffs" title="API Tradeoffs"></p>
+<p>The problem details approach is the more professional and industry-standard choice, and it is what we'll be using going forward.</p>
+<p>We also need to update the <code>GetById</code> method for consistency.</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Ok&lt;Category&gt;, ProblemHttpResult&gt;&gt; GetById(int <span class="hljs-built_in">id</span>)
+{
+    var category = _categories.FirstOrDefault(c =&gt; c.Id == <span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (category == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(category);
+}
+</div></code></pre>
+<p>We also need to declare the correct response type.</p>
+<pre class="hljs"><code><div>    group.MapGet(<span class="hljs-string">&quot;/{id:int}&quot;</span>, GetById)
+        .WithName(<span class="hljs-string">&quot;GetCategoryById&quot;</span>)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+</div></code></pre>
+<h2 id="put-or-patch">PUT or PATCH</h2>
+<p>We have to make a decision.</p>
+<p><img src="assets/images/put-or-patch.jpg" alt="Put or Patch" title="Put or Patch"></p>
+<p><code>Category</code> only has an ID and Name at the moment so their is no difference. In the future their could be more fields.</p>
+<p>We will go with <strong>PUT</strong> for convention. Users who use our API will instinctively reach for <strong>PUT</strong> when they want to modify a resource.</p>
+<h2 id="put">PUT</h2>
+<p>Let's now implement the <strong>PUT</strong> operation for categories. Start with the declaration of handler method.</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Ok&lt;Category&gt;, ProblemHttpResult&gt;&gt; Update(int <span class="hljs-built_in">id</span>, Category updatedCategory)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(updatedCategory.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var existingCategory = _categories.FirstOrDefault(category =&gt; category.Id == <span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingCategory == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (_categories.Any(category =&gt; category.Id != <span class="hljs-built_in">id</span> &amp;&amp; category.Name.Equals(updatedCategory.Name, StringComparison.OrdinalIgnoreCase)))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{updatedCategory.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    existingCategory.Name = updatedCategory.Name;
+    
+    <span class="hljs-built_in">return</span> TypedResults.Ok(existingCategory);
+}
+</div></code></pre>
+<h3 id="2-ids">2 IDs</h3>
+<p>This raises an interesting issue though. The <code>Category</code> object we pass in the body also has an ID. Isn't this redundant? What if the two IDs are different? And shouldn't we just pass the name alone?</p>
+<p>These are all valid concerns. And we will deal with them soon, once we start using <strong>DTOs</strong>. <strong>Data Transfer Objects</strong>.</p>
+<p>If the two IDs happen to be different, we will simply ignore the one from the body. The ID from the root is the one that wins.</p>
+<h3 id="updating-the-category-class">Updating the Category class</h3>
+<pre class="hljs"><code><div>    existingCategory.Name = updatedCategory.Name;
+</div></code></pre>
+<p>Notice that this one line is enough to update the object stored in the list. <code>Categories</code> are classes, so they are reference types. Which means existing category and the object inside the list are not two copies. They are the same object.</p>
+<p>So when we change the name through the variable, we are changing the object that lives in the list.
+We don't need to update the name. We don't need to tell the list to update anything.</p>
+<p>One more thing worth mentioning here.</p>
+<p>We are returning <strong>200 OK</strong> with the updated <code>Category</code> in the body.</p>
+<p>There is also another common convention for <strong>PUT</strong>: <code>204 No Content</code>.</p>
+<p>Which means, done, nothing to show you. Both are valid. 200 with a body is more convenient when the server might change anything along the way. We will stick with 200 and a body as the safer default.</p>
+<p>The last thing we need is to register this endpoint.</p>
+<pre class="hljs"><code><div>    group.MapPut(<span class="hljs-string">&quot;/{id:int}&quot;</span>, Update)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+</div></code></pre>
+<p>This is our <strong>PUT</strong> endpoint.</p>
+<p>Remember, it takes the ID as the root parameter as well as the updated category in the body. You have to fill in the <strong>ID</strong> value and the <strong>Request JSON</strong>.</p>
+<p>Now test this endpoint for errors and a successful update.</p>
+<h2 id="delete">DELETE</h2>
+<p>We will now implement the delete endpoint for <code>Categories</code>. When using such an endpoint, the user simply passes the ID of the item to be deleted in the request route.</p>
+<p>Let's write the signature of the handler that will perform this operation.</p>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;NoContent, ProblemHttpResult&gt;&gt; Delete(int <span class="hljs-built_in">id</span>)
+{
+    var categoryToBeDeleted = _categories.FirstOrDefault(category =&gt; category.Id == <span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (categoryToBeDeleted == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+    _categories.Remove(categoryToBeDeleted);
+
+    <span class="hljs-built_in">return</span> TypedResults.NoContent();
+}
+</div></code></pre>
+<p>When a delete operation succeeds, there isn't really anything meaningful we can return.</p>
+<p>That's why in REST APIs we typically respond with <strong>204 No Content</strong>.</p>
+<p><strong>200 OK</strong> is also a valid choice, but 204 is by far the most common convention. And that's what we'll use here.</p>
+<p>We'll also return program details in case something goes wrong. In this case, the <code>Category</code> with the given ID may not exist in our storage.</p>
+<p>There is one thing worth mentioning here.</p>
+<p>In the final version of this application, a <code>Category</code> would usually have <code>Books</code> assigned to it.</p>
+<p>Deleting a category would then raise an important question. What should happen to those books?</p>
+<p>We don't have to worry about this yet because we are still working with a simple in-memory storage and our categories don't yet have any related data.</p>
+<p>But it is a problem we'll come back to once we connect a real database. Just bear in mind that those are the things we should always consider when deleting data
+from our system.</p>
+<p>For now, the last thing we need to do is to produce the response with status code 204 no content.</p>
+<pre class="hljs"><code><div>    <span class="hljs-built_in">return</span> TypedResults.NoContent();
+</div></code></pre>
+<p>And let's not forget to register this endpoint.</p>
+<pre class="hljs"><code><div>    group.MapDelete(<span class="hljs-string">&quot;/{id:int}&quot;</span>, Delete)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+</div></code></pre>
+<p>Test the endpoint to see if it is working correctly.</p>
+<h3 id="summary">Summary</h3>
+<p>And with that, our endpoint supports all basic CRUD operations.</p>
+<p>Create, read, update and delete.</p>
+<p>We now have a fully functional set of endpoints that covers everything a client needs to manage.</p>
+
+</body>
+</html>
