@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>AI Tools</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">AI Tools <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+
+<h1 id="ai-tools---a-practical-introduction">AI Tools - A practical introduction</h1>
+<h2 id="ai-rules">AI Rules</h2>
+<p><img src="assets/images/ai-rules.jpg" alt="AI Rules" title="AI Rules"></p>
+<h2 id="creating-a-simple-game">Creating a simple game</h2>
+<p>In <strong>Ask</strong> mode:</p>
+<p>These are my instructions:</p>
+<blockquote>
+<p>Guessing game:</p>
+<p>-- The program randomly picks a number between 1 and 6</p>
+</blockquote>
+<p>Copilot won't add the code it generates automatically. We have the option <strong>Insert at Cursor</strong>. Clicking on this will insert it into your code file.</p>
+<p>Generated code:</p>
+<pre class="prettyprint"><code><div>using System;
+
+var randomNumber = Random.Shared.Next(1, 7);
+
+Console.WriteLine($<span class="hljs-string">&quot;Random number: {randomNumber}&quot;</span>);
+</div></code></pre>
+<p>This is pretty basic and has some issues.</p>
+<h2 id="github-copilot">Github Copilot</h2>
+<p>The code has some statements that aren't required. I will write instructions for Copilot to ignore.</p>
+<blockquote>
+<p>Don't use Random.Shared, but plain Random</p>
+<p>Don't import using System</p>
+</blockquote>
+<p><img src="assets/images/copilot-instructions.jpg" alt="Github Copilot instructions" title="Github Copilot instructions"></p>
+<p>Github Copilot understands that these instructions should be remembered and asks if we want to save them to an instruction file. I saves them to a user file that can be used in all projects.</p>
+<p>This file is named <code>copilot-instructions.md</code> and inside this file, we can write any instructions, coding guidelines, or conventions we want Copilot to follow.</p>
+<p>We can edit this file directly or instruct Copilot through the chat and it will update the file for us.</p>
+<p>There are many well-tested templates available online. If you search for something like Copilot Instructions for C#, you will find plenty of examples you can copy and use directly.</p>
+<h2 id="agent-mode">Agent mode</h2>
+<p>Another important mode is <strong>Agent</strong>, which we can select in this drop-down.</p>
+<p>Agent mode is more autonomous. You give it a high-level task, and it plans the steps, edits files, runs terminal commands, and keeps going until the task is done.</p>
+<p>It does use significantly more of your usage allowance than Ask mode, so it's best saved for larger tasks.</p>
+<p><strong>Agent</strong> mode actually modifies the program file directly, unlike <strong>Ask</strong> mode, which only showed us suggestions.</p>
+<blockquote>
+<p>Implement a game: the program select the number between 1 and 6.</p>
+<p>The player has 3 tries to guess it.</p>
+<p>Print appropriate messages about winning or losing.</p>
+</blockquote>
+<p>Generated code:</p>
+<pre class="prettyprint"><code><div>var random = new Random();
+var randomNumber = random.Next(1, 7);
+const int maxTries = 3;
+var won = <span class="hljs-literal">false</span>;
+
+<span class="hljs-keyword">for</span> (var attempt = 1; attempt &lt;= maxTries; attempt++)
+{
+    Console.Write($<span class="hljs-string">&quot;Try {attempt} of {maxTries} - guess a number between 1 and 6: &quot;</span>);
+    var input = Console.ReadLine();
+
+    <span class="hljs-keyword">if</span> (!int.TryParse(input, out var guess) || guess &lt; 1 || guess &gt; 6)
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Please enter a whole number between 1 and 6.&quot;</span>);
+        attempt--;
+        <span class="hljs-built_in">continue</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (guess == randomNumber)
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;You guessed it! You win!&quot;</span>);
+        won = <span class="hljs-literal">true</span>;
+        <span class="hljs-built_in">break</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (attempt &lt; maxTries)
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;That&#x27;s not it. Try again!&quot;</span>);
+    }
+}
+
+<span class="hljs-keyword">if</span> (!won)
+{
+    Console.WriteLine($<span class="hljs-string">&quot;You ran out of tries. The number was {randomNumber}. You lose!&quot;</span>);
+}
+</div></code></pre>
+<p>Agents will add the code to the file. You can choose to keep or undo changes. Remember to check all the code that has been generated!</p>
+<p>In our code the program closes immediately when a correct guess is added. let's change that.</p>
+<blockquote>
+<p>Prevent the console from closing immediately after game ends.</p>
+</blockquote>
+<p>Code is generated at the bottom of our original code.</p>
+<pre class="prettyprint"><code><div>    ...
+
+    Console.WriteLine(<span class="hljs-string">&quot;Press any key to exit.&quot;</span>);
+    Console.ReadKey(intercept: <span class="hljs-literal">true</span>);
+</div></code></pre>
+<p>This fixes our minor issue.</p>
+<h2 id="inline-chat">Inline chat</h2>
+<p>We've been using the general chat panel, which is good for broad questions and tasks.</p>
+<p>But sometimes we want to focus on a specific piece of code. For that, we use the <strong>inline chat</strong>.</p>
+<p>Select the code you want to work with and then either right-click and choose chat or press <strong>Alt+/</strong>.</p>
+<p>A small chat window opens directly in the editor, and Copilot's attention is limited to that selection.</p>
+<p>I want to change the for loop in the code.</p>
+<blockquote>
+<p>Refactor this loop to be smaller. Use Helper methods.</p>
+</blockquote>
+<p>Generated code:</p>
+<pre class="prettyprint"><code><div>var random = new Random();
+var randomNumber = random.Next(1, 7);
+const int maxTries = 3;
+var won = <span class="hljs-literal">false</span>;
+
+<span class="hljs-keyword">for</span> (var attempt = 1; attempt &lt;= maxTries; attempt++)
+{
+    var guess = GetValidGuess(attempt, maxTries);
+    <span class="hljs-keyword">if</span> (guess == null) { attempt--; <span class="hljs-built_in">continue</span>; }
+
+    <span class="hljs-keyword">if</span> (guess == randomNumber)
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;You guessed it! You win!&quot;</span>);
+        won = <span class="hljs-literal">true</span>;
+        <span class="hljs-built_in">break</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (attempt &lt; maxTries)
+        Console.WriteLine(<span class="hljs-string">&quot;Incorrect guess.&quot;</span>);
+}
+
+static int? GetValidGuess(int attempt, int maxTries)
+{
+    Console.Write($<span class="hljs-string">&quot;Try {attempt} of {maxTries} - guess a number between 1 and 6: &quot;</span>);
+    <span class="hljs-keyword">if</span> (int.TryParse(Console.ReadLine(), out var guess) &amp;&amp; guess &gt;= 1 &amp;&amp; guess &lt;= 6)
+        <span class="hljs-built_in">return</span> guess;
+    
+    Console.WriteLine(<span class="hljs-string">&quot;Please enter a whole number between 1 and 6.&quot;</span>);
+    <span class="hljs-built_in">return</span> null;
+}
+
+<span class="hljs-keyword">if</span> (!won)
+{
+    Console.WriteLine($<span class="hljs-string">&quot;You ran out of tries. The number was {randomNumber}. You lose!&quot;</span>);
+}
+
+Console.WriteLine(<span class="hljs-string">&quot;Press any key to exit.&quot;</span>);
+Console.ReadKey(intercept: <span class="hljs-literal">true</span>);
+</div></code></pre>
+<p>Another useful feature is inline code completions. As we type, Copilot suggests what comes next. We can press tab to accept or just keep typing to ignore it.</p>
+<p>You can also write a comment to guide the suggestion.</p>
+<p>As soon as I pause, Copilot suggests the next lines. Whether the suggestion makes sense depends on how precisely we described what we want. I could accept it with tab and then remove the comment.</p>
+<p>Let's look at two more features.</p>
+<h3 id="explain">Explain</h3>
+<p>The first is <strong>Explain</strong>.</p>
+<p>If we come across code that's hard to follow, the kind we sometimes inherit from others and can't immediately make sense of. In this case, Copilot can walk us through it.</p>
+<p>Select the code, right-click and choose <code>Copilot Actions -&gt; Explain</code>.</p>
+<p>Copilot will break it down step by step in the chat panel.</p>
+<h3 id="compilation-errors">Compilation errors</h3>
+<p>Finally, Copilot can help <strong>fix compilation errors</strong>.</p>
+<p>Intentionally introduce an error. Now, let's ask Copilot to fix them.</p>
+<p>Copilot asks whether it can access the build logs and build the solution to verify the fix. Let's allow that.</p>
+<p>Now it has the actual compiler output to work with and it correctly identified the issue.</p>
+<p>Let's apply the changes.</p>
+<h3 id="an-example-copilot-instructionsmd-file">An example copilot-instructions.md file</h3>
+<pre class="prettyprint"><code><div>---
+description: Guidelines <span class="hljs-keyword">for</span> building modern C# and .NET applications
+applyTo: <span class="hljs-string">&quot;**/*.cs&quot;</span>
+---
+
+<span class="hljs-comment"># C# and .NET Development Guidelines</span>
+
+<span class="hljs-comment">## 1. Language Version &amp; Core Standards</span>
+* **Target Version:** Always write idiomatic C# using the latest language features (C# 13/C# 14 capabilities).
+* **Architecture:** Prioritize Clean Architecture, Domain-Driven Design (DDD), and SOLID principles.
+* **Formatting:** Adhere to `.editorconfig` rules. Use Allman brace style, file-scoped namespaces, and single-line using directives.
+
+<span class="hljs-comment">## 2. Code Generation &amp; Idiomatic Patterns</span>
+* **Nullability:** Strictly enforce Nullable Reference Types (NRT). Validate inputs at entry points using `ArgumentNullException.ThrowIfNull`.
+* **Pattern Matching:** Prefer switch expressions and advanced pattern matching over complex `if-else` blocks.
+* **Modern Constructs:** Utilize `nameof()` instead of magic strings, collection expressions `[]`, and primary constructors <span class="hljs-built_in">where</span> appropriate.
+* **Defensive Coding:** Use `is null` or `is not null` instead of standard equality operators.
+
+<span class="hljs-comment">## 3. Asynchronous &amp; Performance Best Practices</span>
+* **Async/Await:** Always pass a `CancellationToken` through the execution chain. Prefer appending `.ConfigureAwait(<span class="hljs-literal">false</span>)` <span class="hljs-keyword">in</span> non-UI/library code.
+* **Allocation Tuning:** Use `ReadOnlySpan&lt;T&gt;` or `Memory&lt;T&gt;` <span class="hljs-keyword">for</span> heavy data or string parsing to optimize memory allocations.
+
+<span class="hljs-comment">## 4. Error Handling &amp; Documentation</span>
+* **Exceptions:** Catch specific exceptions rather than base `Exception`. Throw meaningful custom exceptions when domain invariants are violated.
+* **API Documentation:** Generate proper XML summary comments <span class="hljs-keyword">for</span> public APIs, including `&lt;param&gt;`, `&lt;returns&gt;`, and `&lt;exception&gt;` tags.
+
+<span class="hljs-comment">## 5. Unit Testing Rules</span>
+* **Framework:** Use xUnit/NUnit along with NSubstitute or Moq <span class="hljs-keyword">for</span> mocking.
+* **Naming:** Format <span class="hljs-built_in">test</span> methods clearly using `MethodName_StateUnderTest_ExpectedBehavior`.
+* **Structure:** Organize tests strictly using the Arrange-Act-Assert (AAA) pattern.
+</div></code></pre>
+<h2 id="prompting-basics-for-coding-tasks">Prompting basics for coding tasks</h2>
+<p>We are going to look at four practical principles for writing prompts that actually produce good code.</p>
+<p>These principles apply the same way regardless of which tool you are using, whether you are
+typing into a chat window in your browser or working with an AI assistant directly in your IDE.</p>
+<h3 id="give-some-context">Give some context</h3>
+<p>The first principle is to give AI some context.</p>
+<p>If you are using AI outside the IDE, it has no idea what project you are working on, what
+technology stack you are using, or what conventions you follow. You need to provide that context yourself.</p>
+<p>Even inside the IDE, where the AI can see your project files, it still does not know
+your conventions or architectural decisions unless you spell them out.</p>
+<p>Either way, if you do not tell it, it will make assumptions and those assumptions are often wrong.</p>
+<p>Compare these two prompts.</p>
+<p><img src="assets/images/context.jpg" alt="Context" title="Context"></p>
+<p>Yes, the second prompt takes more effort to write. But because of that effort, we get code that is already 90% of the way there.</p>
+<p>Context does not have to be limited to what you type either. Most AI tools let you attach files directly. Relevant source files, a diagram of your architecture, or even a screenshot of an error.</p>
+<p>This is often faster and more precise than describing the same thing in words.</p>
+<p>Most AI tools also give us a way to store shared context, so we do not have to repeat it in every prompt.</p>
+<p>In tools like GitHub Copilot you create an instructions file, and the tool reads it automatically at the start of every session.</p>
+<p>Define the context once, and the AI carries it into every conversation.</p>
+<h3 id="be-specific">Be specific</h3>
+<p>The second principle is to be specific.</p>
+<p>Vague prompts produce vague results.</p>
+<p>If you describe exactly what the function should do, what it should receive and what it should return, the result will be much closer to what you need. This also means <strong>don't ask too many things at once</strong>. If you need an endpoint, a DTO and a validator, ask for them one at a time.</p>
+<p><img src="assets/images/be-specific.jpg" alt="Be specific" title="Be specific"></p>
+<h3 id="show-a-pattern">Show a pattern</h3>
+<p>The third principle is to show a pattern.</p>
+<p>This is one of the most effective things you can do.</p>
+<p>If you already have a piece of code in your project that does something similar to what you need, show it to the AI and say, do this, but for something else.</p>
+<p>The AI will follow your structure, your naming conventions and your coding style. The result will fit naturally into your code base because it is based on something that is already there.</p>
+<p>This principle becomes more useful the further you get into a project.</p>
+<p>Early on, you are establishing patterns. Later, you are repeating them.</p>
+<p>And that repetition is exactly where AI saves the most time.</p>
+<h3 id="iterate">Iterate</h3>
+<p>The fourth principle is to iterate.</p>
+<p>Even with a well-written prompt that follows all the principles mentioned, we will not
+always get exactly what we need on the first try. That is not a failure. It is just how it works.</p>
+<p><img src="assets/images/iterate.jpg" alt="Use iteration" title="Use iteration"></p>
+<p>In the example above the first try didn't allow for dashes in the ISBNs. The second iteration gets closer to what we really want.</p>
+<h3 id="summary">Summary</h3>
+<p>That covers our four principles. Here is a quick reminder before we finish.</p>
+<p><img src="assets/images/prompt-points.jpg" alt="Prompt points" title="Prompt points"></p>
+<p>These principles work the same way across all AI tools.</p>
+<h2 id="when-to-be-careful-with-ai">When to be careful with AI</h2>
+<p>The situations where reaching for AI without thinking can slow you down or cause real problems.</p>
+<p>The goal isn't to avoid AI altogether, but to know when to be more careful.</p>
+<p>There are three categories worth talking about.</p>
+<h3 id="things-you-do-not-yet-understand">Things you do not yet understand</h3>
+<p>First, things you do not yet understand.</p>
+<p>If you are learning something new, a concept, a pattern, a technology you have never worked with  before, and you ask AI to write the code for you, you will get something that looks correct.</p>
+<p>It may even work, but you will not know why it works. And more importantly, you will not know when it breaks.</p>
+<h3 id="using-ai-to-make-architectural-decisions-at-the-start-of-a-project">Using AI to make architectural decisions at the start of a project</h3>
+<p>The second category is using AI to make architectural decisions at the start of a project.</p>
+<p>When you are at the beginning of a project, deciding how to structure the codebase,
+what patterns to follow, how different parts will communicate, AI can be a poor decision maker.</p>
+<p>The output will tend towards the generic and early architectural decisions are expensive to undo.</p>
+<p>This part of the project should be created by somebody who understands the project deeply.</p>
+<h3 id="what-not-to-paste-into-ai">What not to paste into AI</h3>
+<p>The third point is about what not to paste into AI.</p>
+<p>This is the most practical category, and it catches a lot of people off guard.</p>
+<p>Most AI tools send your input to external servers. That means anything you paste into a chat window leaves your machine.</p>
+<p>For most code, that is fine. But there are things that should never go in. Passwords, API keys, and tokens are the obvious ones.</p>
+<p>A secret in a code file is a risk, no matter what tools you are using. The right place for secrets is outside the code base.</p>
+<p>Database records with real user information, log files, email exports, spreadsheets with customer data. None of this should go into an AI chat.</p>
+<p>The rule of thumb is simple. Before you paste something into AI, ask yourself whether you would be  comfortable if that text ended up somewhere outside your organization. If the answer is no, don't paste it.</p>
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>
