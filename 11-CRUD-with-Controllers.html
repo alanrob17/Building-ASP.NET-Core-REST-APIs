@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>11-CRUD-with-Controllers.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="crud-with-controllers">CRUD with Controllers</h1>
+<p>We are now going to switch from <strong>Minimal APIs</strong> to <strong>Controller APIs</strong>.</p>
+<h2 id="author-entity">Author entity</h2>
+<p>We are going to create the <code>Author</code> entity. This is a good opportunity to see how we can speed up repetitive work with the help of an AI assistant.</p>
+<p>I will open the <code>Category</code> file as a reference. We could write it manually, but let's ask AI to do it instead.</p>
+<p>My prompt:</p>
+<blockquote>
+<p>I have built a Library Management API.</p>
+<p>In the Entities folder I have a Categories entity.  Based on this class can you create a Author class with the fields:</p>
+<p>Id, FirstName, LastName and YearOfBirth.</p>
+</blockquote>
+<p>This is the generated code. I made one change and that is to make <code>YearOfBirth</code> nullable.</p>
+<pre class="hljs"><code><div>    public class Author
+    {
+        public int Id { get; <span class="hljs-built_in">set</span>; }
+        public required string FirstName { get; <span class="hljs-built_in">set</span>; }
+        public required string LastName { get; <span class="hljs-built_in">set</span>; }
+        public int? YearOfBirth { get; <span class="hljs-built_in">set</span>; }
+    }
+</div></code></pre>
+<p>Some older authors may have an unknown birth year.</p>
+<h2 id="get">GET</h2>
+<p>Create a Controller class and a <strong>GET</strong> endpoint.</p>
+<p>Create a folder:</p>
+<blockquote>
+<p>Controllers</p>
+</blockquote>
+<p>I will add the <code>AuthorsController</code> class inside it.</p>
+<p>Notice that we now have two separate folders. Endpoints for our minimal API style and controllers for the traditional approach.</p>
+<p>This is a bit artificial as both folders contain code that defines endpoints for a resource.</p>
+<p>But keeping them separate helps us stay organized visually. And it also matches what you will find in most projects so it's a convention worth being familiar with.</p>
+<p>Let's start implementing the <code>AuthorsController</code>.</p>
+<p>The first thing every controller class needs is to inherit from <code>ControllerBase</code>.</p>
+<p><code>ControllerBase</code> is the base class provided by ASP.NET Core that gives our controller everything it needs to handle <strong>HTTP</strong> requests and produce responses.</p>
+<p>It provides helper methods for returning responses, like <code>OK</code>, <code>NotFound</code>, <code>BadRequest</code>, and access</p>
+<p>to the HTTP context, which is an object that represents the current request and response. It contains things like request headers or information about the logged in user.</p>
+<p>One thing worth mentioning.</p>
+<p>There is also a class called <code>Controller</code>, which inherits from <code>ControllerBase</code> and adds support</p>
+<p>for rendering HTML pages. We are building a REST API, so we don't need that.</p>
+<p>Next, we want to add the <strong>APIController</strong> attribute to this class. This attribute activates several helpful behaviors.</p>
+<p>For example, if a request fails validation, ASP.NET Core will automatically return a `BadRequest``
+response without us having to check for that manually in every endpoint. It also handles some binding details automatically.</p>
+<pre class="hljs"><code><div>    [ApiController]
+    public class AuthorsController : ControllerBase
+    {
+
+    }
+</div></code></pre>
+<p>For now, just think of it as this attribute tells the framework that this class is an <strong>APIController</strong> and it should behave accordingly.</p>
+<p>Let's add a temporary local list as our data storage similar to what we did with <code>Categories</code>.</p>
+<pre class="hljs"><code><div>private static List&lt;Author&gt; _authors = new List&lt;Author&gt;
+{
+    new Author { Id = 1, FirstName = <span class="hljs-string">&quot;Alan&quot;</span>, LastName = <span class="hljs-string">&quot;Robson&quot;</span>, YearOfBirth = 1952 },
+    new Author { Id = 2, FirstName = <span class="hljs-string">&quot;James&quot;</span>, LastName = <span class="hljs-string">&quot;Robson&quot;</span>, YearOfBirth = 2006 },
+    new Author { Id = 3, FirstName = <span class="hljs-string">&quot;Charley&quot;</span>, LastName = <span class="hljs-string">&quot;Robson&quot;</span>, YearOfBirth = 2011 }
+};
+</div></code></pre>
+<p>Now, let's implement the <code>getAll()</code> method. Just as with minimal APIs, we make it <strong>async</strong> right away and return a task. It makes no sense now but will when we work with databases.</p>
+<pre class="hljs"><code><div>    [HttpGet(<span class="hljs-string">&quot;api/authors&quot;</span>)]
+    public async Task&lt;ActionResult&lt;List&lt;Author&gt;&gt;&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+    {
+        <span class="hljs-built_in">return</span> Ok(_authors);
+    }
+</div></code></pre>
+<p>The return type is <code>ActionResult</code> of <code>List&lt;Author&gt;</code>.</p>
+<p>Instead of <code>results.Ok</code>, we call <code>Ok</code> directly. It is a method we inherited from ControllerBase.</p>
+<p>The <code>GetAll()</code> method itself is almost ready, but there are a couple of things missing.</p>
+<p>First, we need to tell the framework which HTTP method this handler responds to. In minimal APIs, we did that by calling MapGet.</p>
+<p>In Controllers, we use an <strong>Attribute</strong>.</p>
+<p>Second, the framework still doesn't know which URL root should map to this controller. We define that with the <strong>Route</strong> attribute applied to the class.</p>
+<pre class="hljs"><code><div>    [ApiController]
+    [Route(<span class="hljs-string">&quot;api/[controller]&quot;</span>)]
+    public class AuthorsController : ControllerBase
+    {
+        ...
+</div></code></pre>
+<p>This part is a placeholder. The framework replaces it automatically with the name of our class, minus the word <strong>Controller</strong>. So `AuthorsController<code>becomes</code>Authors``.</p>
+<p>And the full route becomes <code>api/Authors</code>. This is convenient, because we never have to update the root manually if we rename the class.</p>
+<p>The last thing we need is to register controllers in <code>Program.cs</code>. This requires two new lines.</p>
+<pre class="hljs"><code><div>    ...
+    builder.Services.AddOpenApi();
+    builder.Services.AddControllers();
+    ...
+</div></code></pre>
+<p>This registers the <strong>Controller</strong> infrastructure, so that the framework knows Controllers exist in our application and should be used. And secondly:</p>
+<pre class="hljs"><code><div>        ...
+        app.MapCategoriesEndpoints();
+        app.MapControllers();
+        ...
+</div></code></pre>
+<p>This tells the Routing system to scan our assembly for Controller classes and register
+their endpoints based on the attributes like <strong>Route</strong> and <strong>HTTP</strong> get.</p>
+<p>Without this line, our Controller would exist, but never receive any requests.</p>
+<p>Let's run and test this application in Scalar.</p>
+<p><img src="assets/images/get-authors.jpg" alt="Get Authors" title="Get Authors"></p>
+<h2 id="understanding-actionresultt">Understanding ActionResult&lt;T&gt;</h2>
+<p>We need to discuss what <strong>ActionResult</strong> of <strong>T</strong> actually is, why the compiler does not enforce the type we declare inside it, and why we should still always declare it correctly.</p>
+<p>Let me show you something that may be a bit surprising. We have:</p>
+<pre class="hljs"><code><div>Task&lt;ActionResult&lt;List&lt;Author&gt;&gt;&gt; GetAll()
+</div></code></pre>
+<p>Change it to:</p>
+<pre class="hljs"><code><div>Task&lt;ActionResult&lt;Author&gt;&gt; GetAll()
+</div></code></pre>
+<p>Or:</p>
+<pre class="hljs"><code><div>&gt; Task&lt;ActionResult&lt;bool&gt;&gt; GetAll()
+</div></code></pre>
+<p>It still compiles? We declare we return an action result with a <strong>boolean</strong>, yet we return a List.</p>
+<p>To understand this, we need to look at what <code>OK</code> actually returns.</p>
+<p><code>OK</code> returns an <strong>OKObjectResult</strong>.</p>
+<p>It inherits from <strong>ObjectResult</strong>, which inherits from <strong>ActionResult</strong>.</p>
+<p>But the return type is action result of <strong>T</strong>, not <strong>ActionResult</strong>.</p>
+<p>So at some point, a conversion must happen from <strong>ActionResult</strong> to <strong>ActionResult</strong> of <strong>T</strong>.</p>
+<p>Importantly, this conversion does not check whether the payload matches the declared type <strong>T</strong>.</p>
+<p>It behaves the same way, regardless of what the payload actually contains.</p>
+<p>So the type parameter <strong>T</strong> is never enforced by the compiler. The framework doesn't verify it at runtime either. So why do we even bother declaring the type here?</p>
+<p>Well, there are two reasons.</p>
+<p>In Scalar we can see this endpoint documentation, and it shows what the endpoint may return. In this case, a sample value for <strong>bool</strong>.</p>
+<p>With the current state of our code, this is completely wrong. The endpoint actually returns a list of authors, which we can confirm by calling it. The endpoint works as expected. A list of <code>Authors</code> is returned.</p>
+<p>It is just the documentation that is lying. And this is a real problem in team environments.</p>
+<p>So remember, the type declared inside <strong>ActionResult</strong> of <strong>T</strong> is not enforced by the compiler, but it matters for the people reading our code and for anyone reading the API documentation.</p>
+<p>So always make sure it truly reflects what we return from the method.</p>
+<h2 id="getbyid">GetById</h2>
+<p>We will implement the <code>GetById</code> endpoint in our controller.</p>
+<p>We will also look at how <strong>root parameters</strong> and <strong>root constraints</strong> work in controllers.</p>
+<p>And we will learn how to correctly document all possible responses an endpoint may return.</p>
+<p>Let's start with the method signature. It will take an author's ID and return an <code>ActionResult</code> of <code>Author</code>.</p>
+<p>If the author does not exist, we return a <strong>404 Not Found</strong> with a descriptive <code>Problem</code> details response. The <code>Problem</code> method comes from ControllerBase.</p>
+<p>If the <code>Author</code> is found, we simply return it with the <strong>200 OK</strong> status.</p>
+<p>The body of this method is very similar to what we had in Minimal APIs. It is mostly what surrounds it that differs.</p>
+<p>First, we need to declare that this is a <code>Get</code> method and that it takes an ID parameter in the route.</p>
+<pre class="hljs"><code><div>[HttpGet(<span class="hljs-string">&quot;api/authors/{id}&quot;</span>)]
+</div></code></pre>
+<p>The string inside the attribute defines the root segment that will be appended to the base root of the controller.</p>
+<p>The curly braces mark it as a Route parameter and the name inside, <code>id</code>, must match the name of the method parameter so that the framework knows how to bind them together.</p>
+<p>The full root for this endpoint will be <code>api/authors/id</code>.</p>
+<p>Just as we did in minimal APIs, we can use a <strong>Route constraint</strong>. This restricts the parameters to integer values only.</p>
+<pre class="hljs"><code><div>[HttpGet(<span class="hljs-string">&quot;api/authors/{id:int}&quot;</span>)]
+</div></code></pre>
+<p>Lastly, we should declare that this endpoint may return a 404 response.</p>
+<p>With controllers, it all lives in one place, right at the method definition as attributes.</p>
+<pre class="hljs"><code><div>[HttpGet(<span class="hljs-string">&quot;api/authors/{id}&quot;</span>)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; GetById(int <span class="hljs-built_in">id</span>)
+{
+    var author = _authors.FirstOrDefault(author =&gt; author.Id == <span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (author == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+    <span class="hljs-built_in">return</span> Ok(author);
+}
+</div></code></pre>
+<p>Let's run the application and check this in Scalar.</p>
+<p>I can see an issue already.</p>
+<p>The documentation declares that this endpoint may only return 404, while in fact it can also return 200 with a single <code>Author</code> as the payload.</p>
+<p>If we add a <strong>single</strong> <code>ProducesResponseType</code> attribute, automatic Scalar documentation detection stops.</p>
+<p>We have to add the missing attribute.</p>
+<pre class="hljs"><code><div>[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+</div></code></pre>
+<p>For consistency, add <code>ProducesResponseType</code> even for an endpoint with only one possible response, like our <code>GetAll</code> endpoint.</p>
+<p>Run the application again and now both responses are documented correctly.</p>
+<p>Test for failure (404) and correct (200) responses.</p>
+<h2 id="post">POST</h2>
+<p>Let's now implement the <strong>POST</strong> endpoint in our controller. Once again, we'll start with the method signature. We can decorate it with the <strong>HTTP</strong> post attribute right away.</p>
+<p>The <code>Author</code> parameter will be automatically populated with the data from the request body.</p>
+<p>It is one of the behaviors that API controller attribute handles for us automatically.</p>
+<pre class="hljs"><code><div> [HttpPost(<span class="hljs-string">&quot;api/authors&quot;</span>)]
+ public async Task&lt;ActionResult&lt;Author&gt;&gt; Create(Author author)
+ {
+    ...
+</div></code></pre>
+<p>Now let's deal with validation.</p>
+<p>First, let's make sure the Author's first and last name are not empty.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+{
+    <span class="hljs-built_in">return</span> Problem(
+        detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+        statusCode: StatusCodes.Status400BadRequest);
+}
+</div></code></pre>
+<p>Next, we should check whether an Author with the same ID already exists in our storage.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">if</span> (_authors.Any(existingAuthor =&gt; existingAuthor.Id == author.Id))
+{
+    <span class="hljs-built_in">return</span> Problem(
+        detail: $<span class="hljs-string">&quot;An author with ID {author.Id} already exists.&quot;</span>,
+        statusCode: StatusCodes.Status409Conflict);
+}
+</div></code></pre>
+<p><strong>Note:</strong> this is only necessary because we are using a local list as a temporary storage. Once we connect to a real database, it will generate unique IDs on its own,</p>
+<p>Notice this status code, <strong>409 Conflict</strong>, which is the correct response when a resource with that identifier already exists.</p>
+<p>Once again, I perform a cheap check first and only then the one that needs the access to the storage.</p>
+<p>Validation for the <code>YearOfBirth</code> is an option but we will look at this once we get to more advanced validation.</p>
+<p>With all those checks passed, we can add the <code>Author</code> to our storage.</p>
+<pre class="hljs"><code><div>    _authors.Add(author);
+</div></code></pre>
+<p>Now what should we return as a response?</p>
+<p>For post endpoints, we typically return the created object along with the URL at which it can be retrieved, usually a get endpoint with the ID of the new object.</p>
+<pre class="hljs"><code><div><span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, author);
+</div></code></pre>
+<p><code>CreatedAtAction</code> builds the correct response for us.</p>
+<p>The first parameter is the name of the method that handles the <strong>GET</strong> request.</p>
+<p>And notice we use <code>nameof</code> rather than a plain string. This is important.</p>
+<p>If we ever rename that method, the compiler will catch the problem immediately. With a hard-coded string, it would break silently.</p>
+<p>The second parameter is an <strong>anonymous object</strong> containing all the arguments that method needs. In our case, just the ID.</p>
+<p>The third parameter is the newly created object.</p>
+<p>What is still missing is the documentation of all possible responses.</p>
+<p>Let's ask Copilot to add it.</p>
+<p>Prompt:</p>
+<p><strong>\Ask</strong></p>
+<p><em>Document possible Response Types with <code>ProduceResponseType</code> attributes for the Create method in the AuthorsController. Base on other methods in the same file.</em></p>
+<p>This will create the correct response types for us.</p>
+<pre class="hljs"><code><div>[HttpPost(<span class="hljs-string">&quot;api/authors&quot;</span>)]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+...
+</div></code></pre>
+<h3 id="complete-post-code">Complete POST code:</h3>
+<pre class="hljs"><code><div>[HttpPost(<span class="hljs-string">&quot;api/authors&quot;</span>)]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; Create(Author author)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (_authors.Any(existingAuthor =&gt; existingAuthor.Id == author.Id))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;An author with ID {author.Id} already exists.&quot;</span>,
+            statusCode: StatusCodes.Status409Conflict);
+    }
+
+    _authors.Add(author);
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, author);
+}
+</div></code></pre>
+<p>Test this endpoint in Scalar. Check the documentation to see the response types and test all conditions.</p>
+<p>Let's check the URL. There is one small issue. The author segment starts with an uppercase letter where URLs in our API should use lowercase letters.</p>
+<p><img src="assets/images/uppercase-issue.jpg" alt="Uppercase issue" title="Uppercase issue"></p>
+<p>Note: <code>Authors</code> instead of <code>authors</code>.</p>
+<p>Fortunately, ASP.NET Core provides a routing option that takes care of this for us.</p>
+<p>In <code>Program.cs</code>:</p>
+<pre class="hljs"><code><div>    ...
+    builder.Services.AddControllers();
+    builder.Services.AddRouting(options =&gt;
+    {
+        options.LowercaseUrls = <span class="hljs-literal">true</span>;
+        options.LowercaseQueryStrings = <span class="hljs-literal">true</span>;
+    });
+
+    var app = builder.Build();
+    ...
+</div></code></pre>
+<p>This tells ASP.NET Core to generate all URLs using lowercase letters.</p>
+<p>Let's try again.</p>
+<p><img src="assets/images/correct-case.jpg" alt="Correct case URL" title="Correct case URL"></p>
+<p>Now the URL is correct.</p>
+<p>Let's use it to confirm the object was actually created.</p>
+<blockquote>
+<p>https://localhost:7040/api/authors/api/authors/6</p>
+</blockquote>
+<p>This URL returns the object successfully.</p>
+<h2 id="put">PUT</h2>
+<p>In this lesson, we will implement the put endpoint in our controller. For a change, let's use ChatGPT AI to write this endpoint. Give it the entire controller class as a context.</p>
+<p><img src="assets/images/chatgpt-prompt.jpg" alt="ChatGPT prompt" title="ChatGPT prompt"></p>
+<p>Now let's analyze it carefully before we accept anything. That looks correct.</p>
+<pre class="hljs"><code><div>[HttpPut(<span class="hljs-string">&quot;api/authors/{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; Update(int <span class="hljs-built_in">id</span>, Author author)
+{
+    var existingAuthor = _authors.FirstOrDefault(a =&gt; a.Id == <span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingAuthor == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    existingAuthor.FirstName = author.FirstName;
+    existingAuthor.LastName = author.LastName;
+    existingAuthor.YearOfBirth = author.YearOfBirth;
+
+    <span class="hljs-built_in">return</span> Ok(existingAuthor);
+}
+</div></code></pre>
+<p>Add the code and test it in Scalar. The documentation looks correct. The <strong>PUT</strong> endpoint works as expected.</p>
+<h2 id="delete">DELETE</h2>
+<p>Continue with ChatGPT to create the <strong>DELETE</strong> endpoint.</p>
+<pre class="hljs"><code><div>[HttpDelete(<span class="hljs-string">&quot;api/authors/{id:int}&quot;</span>)]
+[ProducesResponseType(StatusCodes.Status204NoContent)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;IActionResult&gt; Delete(int <span class="hljs-built_in">id</span>)
+{
+    var author = _authors.FirstOrDefault(a =&gt; a.Id == <span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (author == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    _authors.Remove(author);
+
+    <span class="hljs-built_in">return</span> NoContent();
+}
+</div></code></pre>
+<p>One small change:</p>
+<pre class="hljs"><code><div>var authorToBeDeleted = _authors.FirstOrDefault(a =&gt; a.Id == <span class="hljs-built_in">id</span>);
+</div></code></pre>
+<p>This makes our intent clear.</p>
+<p>Another small change:</p>
+<pre class="hljs"><code><div>    public async Task&lt;IActionResult&gt; Delete(int <span class="hljs-built_in">id</span>)
+    ...
+</div></code></pre>
+<p>Change this to <strong>ActionResult</strong> to match the other endpoints in our controller. <strong>ActionResult</strong> is correct because there is nothing to return in the Body.</p>
+<p><strong>Small recommendation</strong>: As mentioned previously, because your controller has:</p>
+<blockquote>
+<p>[Route(&quot;api/[controller]&quot;)]</p>
+</blockquote>
+<p>you can simplify the <strong>DELETE</strong> attribute to <strong>[HttpDelete(&quot;{id:int}&quot;)]</strong>. This applies to your other endpoint attributes too.</p>
+<p>Final code:</p>
+<pre class="hljs"><code><div>    [HttpDelete(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task&lt;ActionResult&gt; Delete(int <span class="hljs-built_in">id</span>)
+    {
+        var authorToBeDeleted = _authors.FirstOrDefault(a =&gt; a.Id == <span class="hljs-built_in">id</span>);
+
+        <span class="hljs-keyword">if</span> (authorToBeDeleted == null)
+        {
+            <span class="hljs-built_in">return</span> Problem(
+                detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        _authors.Remove(authorToBeDeleted);
+
+        <span class="hljs-built_in">return</span> NoContent();
+    }
+</div></code></pre>
+
+</body>
+</html>
