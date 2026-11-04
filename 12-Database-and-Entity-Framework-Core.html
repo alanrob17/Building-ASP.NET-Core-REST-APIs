@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>12-Database-and-Entity-Framework-Core.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="database-and-entity-framework-core">Database and Entity Framework Core</h1>
+<h2 id="install-entity-framework-core">Install Entity Framework Core</h2>
+<p>In Package Manager console install:</p>
+<blockquote>
+<p>dotnet add package Microsoft.EntityFrameworkCore</p>
+<p>dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL</p>
+<p>dotnet add package Microsoft.EntityFrameworkCore.Design</p>
+<p>dotnet tool install --global dotnet-ef</p>
+<p>dotnet tool update --global dotnet-ef</p>
+</blockquote>
+<h3 id="database-provider">Database provider</h3>
+<blockquote>
+<p>dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL</p>
+</blockquote>
+<p>This is the <strong>PostgreSQL</strong> provider for Entity Framework Core. Entity Framework Core on its own does not know how to talk to any specific database. It needs a provider to do that. Think of it as a translator between Entity Framework Core and PostgreSQL.</p>
+<p>This package tells Entity Framework Core how to connect to PostgreSQL, how to generate PostgreSQL-compatible SQL, and how to handle PostgreSQL-specific data types.</p>
+<p>If we were using a different database, we would simply install a different provider.</p>
+<h3 id="entity-framework-design-tools">Entity Framework design tools</h3>
+<blockquote>
+<p>dotnet add package Microsoft.EntityFrameworkCore.Design</p>
+</blockquote>
+<p>This package contains the design tools for Entity Framework Core. Most importantly, the tools we need to create and manage migrations. It is only needed during development, not in production.</p>
+<h3 id="entity-framework-core-command-line-tool">Entity Framework Core command line tool</h3>
+<blockquote>
+<p>dotnet tool install --global dotnet-ef</p>
+</blockquote>
+<p>This installs the Entity Framework Core command-line tool, which we will use to manage migrations.
+For example, to create a new migration, or apply it to the database.</p>
+<p>This is a global tool, meaning it is installed once on our machine and available in any project.</p>
+<p>The Entity Framework Core design package we installed earlier works together with this tool. The package provides the code needed to generate migrations, while .NET Entity Framework is the tool that actually runs the commands.</p>
+<h2 id="dbcontext">DbContext</h2>
+<p>A <code>DbContext</code> is the central class in Entity Framework Core. It is our main point of contact with the database. It represents an active session with the database, and through it we can query data, save new records, update existing ones and delete them.</p>
+<p>Every operation in Entity Framework Core goes through a <code>DbContext</code>.</p>
+<p>Let's create one.</p>
+<p>Add a new folder in our project and name it <strong>DataAccess</strong>.</p>
+<p>Inside, I will create a new class called <code>LibraryDbContext</code>. We typically create one <code>DbContext</code> per database. Since in our project we will only use one database, this will be our only <code>DbContext</code>.</p>
+<p>To make this class a <code>DbContext</code>, we need it to inherit from the <code>DbContext</code> base class.</p>
+<p>We must also provide a constructor that takes one parameter, <code>DbContextOptions</code>.</p>
+<pre class="hljs"><code><div>    public class LibraryDbContext : DbContext
+    {
+        public LibraryDbContext(DbContextOptions&lt;LibraryDbContext&gt; options) : base(options)
+        {
+        
+        }
+    ...
+</div></code></pre>
+<p><code>DbContextOptions</code> carries all the configuration our <code>DbContext</code> needs.</p>
+<p>Things like which database provider to use and the connection string. A connection string is simply a piece of text that tells Entity Framework Core where the database is and how to connect to it.</p>
+<p>We pass the options to the base class constructor so that Entity Framework Core can read them.</p>
+<p>Notice that <code>DbContextOptions</code> is a generic class. And we pass our own class, <code>LibraryDbContext</code>, as the type parameter.</p>
+<p>This is how Entity Framework Core knows which <code>DbContext</code> this configuration belongs to, which could become important when an application has more than one <code>DbContext</code>.</p>
+<h3 id="dbset">DbSet</h3>
+<p>Now, for each entity that will be mapped to a table in the database, we define a <code>DbSet</code>.</p>
+<p>A <code>DbSet</code> represents a table in the database.</p>
+<pre class="hljs"><code><div>    public DbSet&lt;Category&gt; Categories =&gt; Set&lt;Category&gt;();
+    public DbSet&lt;Author&gt; Authors =&gt; Set&lt;Author&gt;();
+</div></code></pre>
+<p>It is what we query and operate on. When we want all <code>Authors</code>, we go through this property.</p>
+<p>The <strong>Set of T</strong> method on the right side is what actually creates and returns that set.</p>
+<p>This returns all Authors. Don't be concerned about returning all this data it is a very lightweight operation.</p>
+<p>Entity Framework Core caches these Sets internally, so nothing heavy is happening each time.</p>
+<p>You may also come across a different syntax for this in other projects.</p>
+<pre class="hljs"><code><div>    public DbSet&lt;Category&gt; Categories { <span class="hljs-built_in">set</span>; get;};
+    public DbSet&lt;Author&gt; Authors { <span class="hljs-built_in">set</span>; get;};
+</div></code></pre>
+<p>The difference is simple. Our approach with <strong>Set of T</strong> makes the property <strong>read-only</strong>. There is no public setter, so nothing outside of this class can overwrite it. This version exposes a public setter, which is generally unnecessary. Functionally, both approaches work the same way.</p>
+<h3 id="programcs">Program.cs</h3>
+<p>We also need to make some changes in the <code>Program.cs</code> class.</p>
+<p>First, we register the <code>DbContext</code>.</p>
+<pre class="hljs"><code><div>    builder.Services.AddControllers();
+    builder.Services.AddDbContext&lt;LibraryDbContext&gt;(options =&gt;
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString(<span class="hljs-string">&quot;LibraryDb&quot;</span>));
+    });
+    ...
+</div></code></pre>
+<p><code>AddDbContext</code> registers our <code>DbContext</code> with the application, so that it is available throughout the entire project.</p>
+<p><code>Options.UseNpgsql</code> tells Entity Framework Core to use PostgreSQL as the database, using the provider we installed earlier.</p>
+<p>This part retrieves the connection string from the configuration. That is from <code>AppSettings.json</code>.</p>
+<p>The key we are looking for is <code>LibraryDB</code>.</p>
+<p>Complete <code>LibraryDbContext.cs</code>:</p>
+<pre class="hljs"><code><div>namespace LibraryManagement.Api.DataAccess
+{
+    public class LibraryDbContext : DbContext
+    {
+        public LibraryDbContext(DbContextOptions&lt;LibraryDbContext&gt; options) : base(options)
+        {
+        
+        }
+
+        public DbSet&lt;Category&gt; Categories =&gt; Set&lt;Category&gt;();
+        public DbSet&lt;Author&gt; Authors =&gt; Set&lt;Author&gt;();
+    }
+}
+</div></code></pre>
+<h2 id="appsettingsjson">appsettings.json</h2>
+<p>Every ASP.NET Core application comes with a configuration file called <code>appsettings.json</code>.</p>
+<p>This is where we store settings that our application needs to run. Things like login configuration, feature flags or connection strings. It is a simple JSON file that lives in the root of our project.</p>
+<p>If we open it, we can see it already has some content generated automatically when we created the project.</p>
+<p>Let's take a quick look at what is in there.</p>
+<p>The <strong>logging</strong> section controls how much information the application writes to the log output.</p>
+<p><em>Allowed hosts</em> set to asterisk means that the application will accept requests from any host.</p>
+<p>Next to <code>appsettings.json</code>, we also have a file called <code>appsettings.development.json</code>.</p>
+<p>Let's talk about why that exists. Applications typically run in different environments.</p>
+<p>For example, on a developer's machine during development and on a server in production. These environments often need different settings.</p>
+<p><img src="assets/images/environments.jpg" alt="Environment settings" title="Environment settings"></p>
+<p>A development database is not the same as a production database. Logging might be more detailed locally than on a live server. .NET handles these through environment-specific configuration files.</p>
+<p><code>Appsettings.json</code> contains the base configuration that applies everywhere.</p>
+<p><code>Appsettings.development.json</code> contains settings specific to the development environment. And they override the base file when the application runs locally. The base file is loaded first and the environment-specific file is loaded on top. If the same key appears in both, the <strong>environment-specific</strong> value wins.</p>
+<p>So how does .NET know which environment is it running in? Well, it reads an environment variable called ASP.NET CoreEnvironment.</p>
+<p>When we run the application from Visual Studio or the .NET CLI locally, this is automatically set to development. Which is why <code>appsettings.development.json</code> gets picked up.</p>
+<p><img src="assets/images/environment-types.jpg" alt="Environment types" title="Environment types"></p>
+<p>On a production server, this would typically be set to production.</p>
+<p><strong>Environment variables</strong> are another layer on top of this configuration system. They are key-value pairs set at the operating system level, outside our application.</p>
+<p>They sit at the top of the configuration hierarchy, meaning they override everything. Both <code>appsettings.development.json</code> and the environment-specific file. This is how production secrets are typically handled in professional setups.</p>
+<p>Sensitive values, like connection strings or API keys, never live in a file. They are injected as environment variables by the hosting platform.</p>
+<h2 id="connection-strings">Connection strings</h2>
+<p>A connection string is a piece of text that tells our application where the database is and how to connect to it. It contains things like the host address, the port, the database name and the credentials.</p>
+<p>Where should the connection string go?</p>
+<p>We could put it in <code>appsettings.json</code>, but that file is meant to contain <strong>base configuration</strong> that applies to all environments. Settings that are safe and universal.</p>
+<p>A connection string is neither of those things. It is local, it is environment-specific and it contains credentials.</p>
+<p><strong>Appsettings.development.json</strong> is the better place. It clearly communicates that this setting belongs to the development environment only.</p>
+<p>In production, the connection string would never come from a file. It would be injected as an environment variable by the hosting platform.</p>
+<p>Keeping the connection string in the development file from the start builds the right habit.</p>
+<p>Environment-specific secrets belong in environment-specific configuration.</p>
+<h3 id="adding-a-connection-string-section">Adding a connection string section</h3>
+<pre class="hljs"><code><div>{
+  <span class="hljs-string">&quot;Logging&quot;</span>: {
+    <span class="hljs-string">&quot;LogLevel&quot;</span>: {
+      <span class="hljs-string">&quot;Default&quot;</span>: <span class="hljs-string">&quot;Information&quot;</span>,
+      <span class="hljs-string">&quot;Microsoft.AspNetCore&quot;</span>: <span class="hljs-string">&quot;Warning&quot;</span>
+    }
+  },
+  <span class="hljs-string">&quot;ConnectionStrings&quot;</span>: {
+    <span class="hljs-string">&quot;LibraryDb&quot;</span>: <span class="hljs-string">&quot;Host=localhost;Port=15432;Database=librarydb;User Id=postgres;Password=london@1;&quot;</span>
+  }
+}
+</div></code></pre>
+<p><strong>Host</strong> = localhost means the database is running on our own machine.</p>
+<p><strong>Port</strong> is the default PostgresQL port. The same one we mapped when we set up the Docker container.</p>
+<p>The key <strong>LibraryDb</strong> here matches exactly what we used in the <code>Program.cs</code> file.</p>
+<p>Let's make sure now this value can be read.</p>
+<p>Our Docker container:</p>
+<blockquote>
+<p>docker run --name library-postgres -e POSTGRES_PASSWORD=london@1 -e POSTGRES_DB=librarydb -p 15432:5432 -d postgres</p>
+</blockquote>
+<p>Set a breakpoint on:</p>
+<blockquote>
+<p>if (app.Environment.IsDevelopment())</p>
+</blockquote>
+<p>Run Debug:</p>
+<p>Add a watch value:</p>
+<blockquote>
+<p>builder.Configuration.GetConnectionString(&quot;LibraryDb&quot;)</p>
+</blockquote>
+<p>If successful you should be able to view the <strong>connection string</strong>.</p>
+<p>With this in place, our application has everything it needs to connect to the database.</p>
+<h2 id="migrations">Migrations</h2>
+
+</body>
+</html>
