@@ -584,3 +584,174 @@ The database is rolled back. Once it is done, we can remove the migration locall
 As you can see, the newest migration file is gone.
 
 ## Updating CategoriesEndpoints to use the database
+
+Now that we have a database set up, let's connect everything together.
+
+The first thing we can do is remove the ``_categories`` private list that we have been using for data.
+
+This will also cause compilation errors in all the places we need to update, so it will be easier to spot them.
+
+Now, instead of reading from and writing to that list, every method will talk directly to the database, using our library **dbContext**.
+
+To make that possible, we need to add it as a parameter to each method that needs database access.
+
+### GetAll
+
+```bash
+private static async Task<Ok<List<Category>>> GetAll(LibraryDbContext dbContext)
+{
+    var categories = await dbContext.Categories.ToListAsync();
+    return TypedResults.Ok(categories);
+}
+```
+
+We inject the **dbContext** as a parameter. MinimalAPI will resolve it automatically from the dependency injection container.
+
+We now call ``ToListAsync`` on ``dbContext.Categories``, which translates to a select query on the 
+database and returns all rows from the Categories table.
+
+Notice that we are using ``await`` here for the first time, and this is exactly the moment it starts to make sense.
+
+Querying a database is an operation that takes time. Our application sends a request to the database and waits for the response. With ``await``, instead of blocking the thread while waiting, we free it up to handle other 
+requests in the meantime. This is also why our methods return ``Task``.
+
+They are truly asynchronous now.
+
+### GetById
+
+```bash
+private static async Task<Results<Ok<Category>, ProblemHttpResult>> GetById(int id, LibraryDbContext dbContext)
+{
+    var category = await dbContext.Categories.FindAsync(id);
+    if (category == null)
+    {
+        return TypedResults.Problem(
+                detail: $"Category with Id {id} not found.",
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    return TypedResults.Ok(category);
+}
+```
+
+Now let's change how we retrieve a ``Category`` by ``Id``. ``FindAsync`` looks up a record by its **primary key**. It is the most efficient way to retrieve a single entity by ``Id``.
+
+You might wonder why we are not using ``FirstOrDefaultAsync`` here, since we could. Entity Framework Core supports link operations on ``DbSet``, so this would also work. But ``FindAsync`` is simply a more convenient and slightly more efficient option, specifically for looking up a record by its **primary key**.
+
+For anything more complex than that, for example, finding a ``Category`` by ``name``, we would use ``FirstOrDefaultAsync``.
+
+### Create
+
+```bash
+private static async Task<Results<CreatedAtRoute<Category>, ProblemHttpResult>> Create(Category category, LibraryDbContext dbContext)
+{
+    if (string.IsNullOrEmpty(category.Name))
+    {
+        return TypedResults.Problem(
+                detail: "Category name is required.",
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    if (await dbContext.Categories.AnyAsync(existingCategory => existingCategory.Name.Equals(category.Name, StringComparison.OrdinalIgnoreCase)))
+    {
+        return TypedResults.Problem(
+                detail: $"A category with the name '{category.Name}' already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
+
+    return TypedResults.CreatedAtRoute(category, "GetCategoryById", new { id = category.Id });
+}
+```
+
+Our endpoint currently accepts a full Category object, including the ``Id`` field but now that the database generates the ``Id`` automatically, it does not make sense for the client to provide it.
+
+The proper solution is to introduce a separate **DTO** for the create request an object that only contains the fields the client should actually send. We will do exactly that soon.
+
+For now, let's keep things simple and just ignore whatever Id the client sends. The database will set its own value if it will be missing.
+
+We no longer need to check for a duplicate Id. The database will handle that. So we will remove this check.
+
+Let's also change how we check whether a Category with the same ``Name`` already exists.
+
+We now use ``AnyAsync`` against the database instead of our local list. It works just the same as the any method from Linq, but it is asynchronous and because we are operating on a dbSet, this will be translated to SQL and executed on the database side so it will not load all categories into memory and filter them locally, but rather filter them on the database side, which is much more efficient.
+
+Now let's change how we actually add the new ``Category``. When we call ``dbContext.Categories.Add``, Entity Framework Core tracks that change in memory, but doesn't immediately write anything to the database.
+
+It is only when we call ``SaveChangesAsync`` that Entity Framework Core translates our pending changes into SQL and executes them against the database.
+
+This means we can make multiple changes and commit them all at once in a single transaction.
+
+Also remember, whenever you make changes to entities, always call ``SaveChangesAsync`` to persist them in the database.
+
+### Update
+
+```bash
+private static async Task<Results<Ok<Category>, ProblemHttpResult>> Update(int id, Category updatedCategory, LibraryDbContext dbContext)
+{
+    if (string.IsNullOrEmpty(updatedCategory.Name))
+    {
+        return TypedResults.Problem(
+                detail: "Category name is required.",
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var existingCategory = await dbContext.Categories.FindAsync(id);
+
+    if (existingCategory == null)
+    {
+        return TypedResults.Problem(
+                detail: $"Category with Id {id} not found.",
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    if (await dbContext.Categories.AnyAsync(category => category.Id != id && category.Name == updatedCategory.Name))
+    {
+        return TypedResults.Problem(
+                detail: $"A category with the name '{updatedCategory.Name}' already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    existingCategory.Name = updatedCategory.Name;
+    await dbContext.SaveChangesAsync();
+
+    return TypedResults.Ok(existingCategory);
+}
+```
+
+We will use ``FindAsync`` to retrieve the category by ``Id``.
+
+Let's also update the ``DuplicateName`` check to use an ``async``.
+
+After we update the ``Category``'s name, we need to save the changes. Entity Framework Core is tracking this entity, meaning it keeps an internal record of what the object looked like when we first retrieved it.
+
+When we call ``SaveChangesAsync``, it compares the current state with that original snapshot and generates an update SQL statement for only the columns that actually changed.
+
+### Delete
+
+```bash
+private static async Task<Results<NoContent, ProblemHttpResult>> Delete(int id, LibraryDbContext dbContext)
+{
+    var categoryToBeDeleted = await dbContext.Categories.FindAsync(id);
+
+    if (categoryToBeDeleted == null)
+    {
+        return TypedResults.Problem(
+                detail: $"Category with Id {id} not found.",
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    dbContext.Categories.Remove(categoryToBeDeleted);
+    await dbContext.SaveChangesAsync();
+
+    return TypedResults.NoContent();
+}
+```
+
+Once we have confirmed the ``Category`` exists, we remove it from the ``DbSet`` and save the changes.
+
+Let's run the application and test everything in Scalar.
+
+## 
