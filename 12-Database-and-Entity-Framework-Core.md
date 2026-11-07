@@ -754,4 +754,493 @@ Once we have confirmed the ``Category`` exists, we remove it from the ``DbSet`` 
 
 Let's run the application and test everything in Scalar.
 
-## 
+## Updating AuthorsController to use a database
+
+This is very similar to what we did for ``Categories`` endpoints, we will ask AI to do it for us.
+
+**Note:** before I did this I committed all of my previous changes to Git.
+
+### Prompt
+
+> ASP.Net Core 10 Web API:      
+>       
+> Update AuthorsController to use LibraryDbContext instead of _authors list.        
+>       
+> Delete the list and follow the same pattern in Handler methods as CategoriesEndpoints keeping in mind that > AuthorsController is a controller not a minimal API
+
+I have uploaded the changes into my ``AuthorsController``.
+
+The one major difference between using ``LibraryDbContext`` in Controllers versus Minimal API is that in Minimal API, the context is passed as a parameter to each individual method.
+
+In a controller, we inject it once through the constructor, and then every method in the class has access to it. This is the standard pattern for dependency injection in Controllers.
+
+In my AI it generated the following code:
+
+```bash
+...
+private readonly LibraryDbContext _dbContext;
+
+public AuthorsController(LibraryDbContext dbContext)
+{
+    _dbContext = dbContext;
+}
+...
+```
+
+There is another way to do this by using a **Primary Constructor**.
+
+```bash
+...
+[ApiController]
+[Route("api/[controller]")]
+public class AuthorsController(LibraryDbContext dbContext) : ControllerBase
+{
+    ...
+```
+
+I will change my code to this but if you don't like primary constructors, you can always use the plain old constructor with a private field.
+
+### GetById and GetAll
+
+```bash
+...
+[HttpGet("{id:int}")]
+[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task<ActionResult<Author>> GetById(int id)
+{
+    var author = await dbContext.Authors.FindAsync(id);
+
+    if (author == null)
+    {
+        return Problem(
+            detail: $"Author with ID {id} not found.",
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    return Ok(author);
+}
+
+[HttpGet()]
+[ProducesResponseType(typeof(List<Author>), StatusCodes.Status200OK)]
+public async Task<ActionResult<List<Author>>> GetAll()
+{
+    var authors = await dbContext.Authors.ToListAsync();
+    return Ok(authors);
+}
+...
+```
+
+### Create
+
+```bash
+...
+[HttpPost()]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+public async Task<ActionResult<Author>> Create(Author author)
+{
+    if (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        return Problem(
+            detail: "First name and last name are required.",
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    if (await dbContext.Authors.AnyAsync(existingAuthor => existingAuthor.Id == author.Id))
+    {
+        return Problem(
+            detail: $"An author with ID {author.Id} already exists.",
+            statusCode: StatusCodes.Status409Conflict);
+    }
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    return CreatedAtAction(nameof(GetById), new { id = author.Id }, author);
+}
+...
+```
+
+This code has a minor issue. Before using the database, the ``Create`` endpoint could produce a **409 Conflict** response, because the ``Id`` was provided by the user, and it could conflict with an existing ``Id`` in this storage. Now, the database assigns ``Id``s, and guarantees they are always unique.
+
+So this response is no longer possible, and this check is no longer needed. Remove them.
+
+### Final code
+
+```bash
+...
+[HttpPost()]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+public async Task<ActionResult<Author>> Create(Author author)
+{
+    if (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        return Problem(
+            detail: "First name and last name are required.",
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    return CreatedAtAction(nameof(GetById), new { id = author.Id }, author);
+}
+...
+```
+
+Remember, conflict can still happen for ``Categories``, because their names must be unique, and if they are not, **409** is the appropriate response.
+
+### Update
+
+Is basically the same.
+
+```bash
+...
+[HttpPut("{id:int}")]
+[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task<ActionResult<Author>> Update(int id, Author author)
+{
+    var existingAuthor = await dbContext.Authors.FindAsync(id);
+
+    if (existingAuthor == null)
+    {
+        return Problem(
+            detail: $"Author with ID {id} not found.",
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    if (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        return Problem(
+            detail: "First name and last name are required.",
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    existingAuthor.FirstName = author.FirstName;
+    existingAuthor.LastName = author.LastName;
+    existingAuthor.YearOfBirth = author.YearOfBirth;
+
+    await dbContext.SaveChangesAsync();
+
+    return Ok(existingAuthor);
+}
+...
+```
+
+### Delete
+
+Once again, basically the same.
+
+```bash
+...
+[HttpDelete("{id:int}")]
+[ProducesResponseType(StatusCodes.Status204NoContent)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task<ActionResult> Delete(int id)
+{
+    var authorToBeDeleted = await dbContext.Authors.FindAsync(id);
+
+    if (authorToBeDeleted == null)
+    {
+        return Problem(
+            detail: $"Author with ID {id} not found.",
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    dbContext.Authors.Remove(authorToBeDeleted);
+    await dbContext.SaveChangesAsync();
+
+    return NoContent();
+}
+...
+```
+
+Test your endpoints.
+
+### Why do we use a concrete DbContext?
+
+Looking at our controllers, you might notice something that raises a reasonable question. We are injecting a concrete class, ``LibraryDbContext``, not an interface.
+
+This goes against the dependency inversion principle, which says we should depend on abstractions, not concrete implementations. So why are we doing this?
+
+Well, Microsoft simply designed ``DbContext`` this way. There is no built-in IDbContext interface to inject instead and this is not an oversight. It is a deliberate design decision.
+
+A large number of real-world ASP.NET Core applications inject ``DbContext`` directly.
+
+Now, depending on a concrete class rather than an interface usually creates a problem, especially in tests.
+
+Typically, when we want to test a class in isolation, we replace its dependencies with mocks. Fake implementations that we fully control. But to do that, we need an interface that our mock will implement.
+
+If we depend on a concrete class, we can't swap it out for mock. In this case, though, it is not a problem in practice, because Entity Framework Core has a built-in in-memory database provider, which allows us to replace the real PostgreSQL database with a lightweight in-memory one during tests.
+
+This is actually more convenient than manually mocking every database call. And it produces tests that are shorter and easier to read.
+
+### Repository pattern
+
+There is an alternative pattern worth knowing about. Called the ``Repository`` pattern. The idea is to introduce an abstraction layer between your business logic and your data source. So instead of talking to the database directly, your code talks to a repository, which handles all the data access behind the scenes. This makes the data source swappable.
+
+In our case, applying this pattern would mean hiding ``DbContext`` behind an interface. For example, ``IAuthorRepository``, so that the controller depends on an interface rather than concrete ``DbContext`` implementation. This is doable, but we should skip it.
+
+The repository pattern is itself complex, and most real-life ASP.NET APIs do not implement it anyway and maybe most notably, ``DbContext`` itself is already based on the repository pattern internally.
+
+Adding another layer on top of that would be more overhead than it is worth. 
+
+### Summary
+
+Injecting library ``DbContext`` directly is a perfectly valid, widely used approach.
+
+## Dependency Injection in ASP.Net Core
+
+Now that we have updated the ``AuthorsController``, let's take a moment to look at something we introduced without fully explaining it.
+
+There is a question worth asking here.
+
+```bash
+    ...
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthorsController(LibraryDbContext dbContext) : ControllerBase
+    {
+        ...
+```
+
+Where does the ``LibraryDbContext`` instance actually come from? We never call new ``AuthorsController`` anywhere in our code. 
+
+```bash
+    var authorsController = new AuthorsController(...);
+```
+
+The controller just gets created somehow, and the ``LibraryDbContext`` is already there, ready to use.
+
+But how? The answer is **Dependency Injection**. This is not a concept specific to .NET. It is a general programming pattern found in practically every modern framework.
+
+ASP.NET Core has its own built-in **Dependency Injection** container, which covers the needs of most applications without any additional libraries.
+
+So what problem does dependency injection actually solve?
+
+Well, without it, our controller would have to create its own ``LibraryDbContext``.
+
+It would look something like this:
+
+```bash
+    public AuthorsController()
+    {
+        _dbContext = new LibraryDbContext(...);
+    }
+```
+
+But this is problematic. The controller would need to know how to configure the ``dbContext``, the connection string, the database provider, everything. Remember, this is just one controller. We will have many more classes that need ``LibraryDbContext``.
+
+So that configuration logic would be scattered across the entire project.
+
+There is a better solution. We can have a central registry called the **Dependency Injection** container. Think of it as a box with all types our application may need.
+
+![Dependency Injection Container](assets/images/dependency-intection-container.jpg "Dependency Injection Container")
+
+We register our services once, and from this point on, the container knows how to create them. We actually do that already.
+
+Every call we make on ``Builder.Services`` in the ``Program.cs`` class is a registration in that container, like putting a new service into that box, making it ready to use.
+
+Add ``dbContext``, add ``Controllers``, add ``OpenAPI``, all of it goes into the same container. Without that registration, the container doesn't know the service exists and cannot inject it anywhere.
+
+For example, consider this line:
+
+```bash
+    builder.Services.AddDbContext<LibraryDbContext>(options =>
+    ...
+```
+
+From that point on, whenever any class needs a LibraryDbContext, it simply declares that need as a **Constructor Parameter** in a Controller or as a **Method Parameter** in minimal API. And the container simply delivers it. This is where the word **Inject** in dependency injection comes from. The container injects the dependency into the class that needs it.
+
+It is worth remembering that every service we register has a specific lifetime.
+
+## Service lifetime
+
+When we register a service, we also tell the container how long its instance should live.
+
+There are three options.
+
+**Singleton** means one instance for the entire lifetime of the application. Everyone who asks for this service gets the same object. A good example would be an in-memory cache. Something that holds data globally and is meant to be shared across the entire application.
+
+**Transient** means a new instance every time someone asks for it. It is good for lightweight, stateless services. For example, a simple validator that takes some input, checks it, and returns a result.
+
+**Scoped** means we have one instance per HTTP request. Everyone who asks for this service within the same request gets the same instance. When the request ends, the instance is disposed of.
+
+For example, a **DbContext** should be scoped. It tracks changes to entities during a request, so it should live exactly as long as the request.
+
+The built-in services are usually configured upfront with the correct lifetime.
+
+But when we start registering our own services, we will think what lifetime is best for them.
+
+Let's say we create an ``IEmailService`` interface and an ``EmailService`` class that implements it.
+
+```bash
+    public interface IEmailService { }
+
+    Public class EmailService : IEmailService { }
+```
+
+This is how we would register it in ``Program.cs`` class.
+
+```bash
+    builder.Services.AddScoped<IEmailService, EmailService>();
+```
+
+This tells the container, whenever someone asks for ``IEmailService``, give them an instance of the ``EmailService`` class. And then in a Controller, we simply declare that we need this dependency.
+
+The controller then depends on the interface, not a concrete class. 
+
+```bash
+    public class AuthorsController(LibraryDbContext dbContext, IEmailService emailService) : ControllerBase
+```
+
+This means it follows the **Dependency Inversion** principle from solid. This means we can swap the implementation at any time. For example, use a fake EmailService in tests, without touching the controller at all.
+
+This loose coupling between classes is the real power of dependency injection. We don't have any custom services in our project yet, but we will. And when we get there, this is exactly the pattern we will follow.
+
+## Adding seed data
+
+When we test our API as developers, it is convenient to already have some data in the database.
+
+A few Categories, Books, Authors, and so on. This gives us a foundation we can use to run any tests we want.
+
+We could add this data manually, through the API, or directly in the DBeaver but that has a couple of downsides. First, if we drop and recreate the database for any reason, we lose all of it and have to set it up again from scratch. Second, if a new developer joins the project, they would have to do the same thing, rather than getting a ready-to-use database from the start.
+
+The solution is **seed data**, a set of initial records that are automatically added to the database when the application starts. We configure it once in our code, and from that point on, even if the database is dropped 
+and recreated, the seed data will be there every time the app starts.
+
+This will be a **development-only** feature. Let's see how this works.
+
+Create a new static class named ``DataSeeder`` in the ``DataAccess`` folder. We make it a static class, because it doesn't hold any state. It is just a container for a method we will call once at startup.
+
+```bash
+public static async Task SeedAsync(IServiceProvider serviceProvider)
+{
+    using var scope = serviceProvider.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
+
+    if (!await dbContext.Authors.AnyAsync())
+    {
+        var authors = new List<Author>
+        {
+            new Author { FirstName = "George", LastName = "Orwell", YearOfBirth = 1903 },
+            new Author { FirstName = "Jane", LastName = "Austen", YearOfBirth = 1775 },
+            new Author { FirstName = "Mark", LastName = "Twain", YearOfBirth = 1835 },
+            new Author { FirstName = "J.R.R.", LastName = "Tolkien", YearOfBirth = 1892 },
+            new Author { FirstName = "Ernest", LastName = "Hemingway", YearOfBirth = 1899 }
+        };
+
+        await dbContext.Authors.AddRangeAsync(authors);
+        await dbContext.SaveChangesAsync();
+
+        var categories = new List<Category>
+        {
+            new Category { Name = "Fiction" },
+            new Category { Name = "Non-Fiction" },
+            new Category { Name = "Science Fiction" },
+            new Category { Name = "Fantasy" },
+            new Category { Name = "Biography" }
+        };
+
+        await dbContext.Categories.AddRangeAsync(categories);
+        await dbContext.SaveChangesAsync();
+    }
+}        
+```
+
+Add the ``SeedAsync`` method. As a parameter, we pass an ``IServiceProvider``.
+
+To understand what it is and why we need it, we need to think about when this method will be called. It will run at application startup, not within any particular HTTP request and since this method writes to the database, it needs a library ``dbContext`` but as we just learned, ``dbContext`` is a scoped service. It is created at the start of an HTTP request and disposed of at the end.
+
+But when we call ``SeedAsync``, there is no **HTTP request**. So we need another way to get ``dbContext``. 
+That is exactly what ``IServiceProvider`` is for. It can create a scope manually, even outside of an HTTP request.
+
+We create a scope manually and use it to resolve library dbContext.
+
+The **using** keyword ensures the scope and everything it created, including the ``dbContext``, is properly disposed when we are done.
+
+Now let's seed some ``Authors``. Before adding anything, we check whether there are already ``authors`` in the database. If this returns true, meaning there are no ``Authors``, we will add some.
+
+If we ever need a clean slate, we can just drop the database and restart.
+
+Now let's add the ``Authors``. Write a comment describing what I need, and Copilot suggests a list.
+
+> // Add a list of 5 well known authors with their FirstName and LastName and YearOfBirth
+
+This will generate them for you. Let's save them to the database. We used ``AddRangeAsync`` instead of calling ``Add`` multiple times. It is a more convenient way to add multiple records at once.
+
+Now let's do the same for ``Categories``.
+
+Finally we wire this up in ``Program.cs``. We only want to call ``SeedAsync`` when running in the development environment.
+
+Delete all existing ``Authors`` and ``Categories`` so we start with a clean slate.
+
+Run the application and this will seed the database.
+
+Every time we start fresh with an empty database, the seed data will be there waiting for us and since this all happens inside the seeder, which is part of our codebase, any developer who joins the team will get this behavior automatically the first time they set up and run the project.
+
+## Switching to Microsoft SQL Server
+
+There are 3 things to change.
+
+* The packages.
+* 1 line in ``Program.cs``
+* The connection string. 
+
+Let's start with packages.
+
+First, we remove the PostgreSQL provider:
+
+```bash
+    dotnet remove Npgsql.EntityFrameworkCore.PostgreSQL
+```
+
+Install the SQL Server provider:
+
+```bash
+    dotnet add package Microsoft.EntityFrameworkCore.SQLServer
+```
+
+Next, ``Program.cs``.
+
+This is the only line that changes here:
+
+```bash
+builder.Services.AddDbContext<LibraryDbContext>(options =>
+{
+    options.UseSQLServer(builder.Configuration.GetConnectionString("LibraryDb"));
+});
+```
+
+And now we need to update the connection string in ``appsettings.development.json``.
+
+```bash
+"ConnectionStrings": {
+  "LibraryDb": "Server=localhost,11433;Database=librarydb;Trusted_Connection=True;"
+}
+```
+
+The trusted connection equals true means we are using Windows authentication.
+
+There is one more thing we need to address. Our existing migrations were generated for PostgreSQL.
+
+They contain PostgreSQL-specific code and will not work correctly with SQL Server. We need to **delete** the migrations folder and generate fresh ones.
+
+> dotnet ef migrations add InitialCreate
+
+Now apply the migrations:
+
+> dotnet ef database update
+
+Check see if the tables have been added. If successful they should hae your seed data.
+
+We now have the same API and the same code, but running on a completely different database.
+
+The only things we changed were two NuGet packages, one line in program.cs and the connection stream.
+
+You could now revert all the changes back to PostgreSQL by using your version control.

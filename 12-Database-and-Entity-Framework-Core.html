@@ -718,6 +718,478 @@ WHERE <span class="hljs-string">&quot;Id&quot;</span>=2;
 </div></code></pre>
 <p>As you can see, the newest migration file is gone.</p>
 <h2 id="updating-categoriesendpoints-to-use-the-database">Updating CategoriesEndpoints to use the database</h2>
+<p>Now that we have a database set up, let's connect everything together.</p>
+<p>The first thing we can do is remove the <code>_categories</code> private list that we have been using for data.</p>
+<p>This will also cause compilation errors in all the places we need to update, so it will be easier to spot them.</p>
+<p>Now, instead of reading from and writing to that list, every method will talk directly to the database, using our library <strong>dbContext</strong>.</p>
+<p>To make that possible, we need to add it as a parameter to each method that needs database access.</p>
+<h3 id="getall">GetAll</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Ok&lt;List&lt;Category&gt;&gt;&gt; GetAll(LibraryDbContext dbContext)
+{
+    var categories = await dbContext.Categories.ToListAsync();
+    <span class="hljs-built_in">return</span> TypedResults.Ok(categories);
+}
+</div></code></pre>
+<p>We inject the <strong>dbContext</strong> as a parameter. MinimalAPI will resolve it automatically from the dependency injection container.</p>
+<p>We now call <code>ToListAsync</code> on <code>dbContext.Categories</code>, which translates to a select query on the
+database and returns all rows from the Categories table.</p>
+<p>Notice that we are using <code>await</code> here for the first time, and this is exactly the moment it starts to make sense.</p>
+<p>Querying a database is an operation that takes time. Our application sends a request to the database and waits for the response. With <code>await</code>, instead of blocking the thread while waiting, we free it up to handle other
+requests in the meantime. This is also why our methods return <code>Task</code>.</p>
+<p>They are truly asynchronous now.</p>
+<h3 id="getbyid">GetById</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Ok&lt;Category&gt;, ProblemHttpResult&gt;&gt; GetById(int <span class="hljs-built_in">id</span>, LibraryDbContext dbContext)
+{
+    var category = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (category == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(category);
+}
+</div></code></pre>
+<p>Now let's change how we retrieve a <code>Category</code> by <code>Id</code>. <code>FindAsync</code> looks up a record by its <strong>primary key</strong>. It is the most efficient way to retrieve a single entity by <code>Id</code>.</p>
+<p>You might wonder why we are not using <code>FirstOrDefaultAsync</code> here, since we could. Entity Framework Core supports link operations on <code>DbSet</code>, so this would also work. But <code>FindAsync</code> is simply a more convenient and slightly more efficient option, specifically for looking up a record by its <strong>primary key</strong>.</p>
+<p>For anything more complex than that, for example, finding a <code>Category</code> by <code>name</code>, we would use <code>FirstOrDefaultAsync</code>.</p>
+<h3 id="create">Create</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;Category&gt;, ProblemHttpResult&gt;&gt; Create(Category category, LibraryDbContext dbContext)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(category.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(existingCategory =&gt; existingCategory.Name.Equals(category.Name, StringComparison.OrdinalIgnoreCase)))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{category.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(category, <span class="hljs-string">&quot;GetCategoryById&quot;</span>, new { <span class="hljs-built_in">id</span> = category.Id });
+}
+</div></code></pre>
+<p>Our endpoint currently accepts a full Category object, including the <code>Id</code> field but now that the database generates the <code>Id</code> automatically, it does not make sense for the client to provide it.</p>
+<p>The proper solution is to introduce a separate <strong>DTO</strong> for the create request an object that only contains the fields the client should actually send. We will do exactly that soon.</p>
+<p>For now, let's keep things simple and just ignore whatever Id the client sends. The database will set its own value if it will be missing.</p>
+<p>We no longer need to check for a duplicate Id. The database will handle that. So we will remove this check.</p>
+<p>Let's also change how we check whether a Category with the same <code>Name</code> already exists.</p>
+<p>We now use <code>AnyAsync</code> against the database instead of our local list. It works just the same as the any method from Linq, but it is asynchronous and because we are operating on a dbSet, this will be translated to SQL and executed on the database side so it will not load all categories into memory and filter them locally, but rather filter them on the database side, which is much more efficient.</p>
+<p>Now let's change how we actually add the new <code>Category</code>. When we call <code>dbContext.Categories.Add</code>, Entity Framework Core tracks that change in memory, but doesn't immediately write anything to the database.</p>
+<p>It is only when we call <code>SaveChangesAsync</code> that Entity Framework Core translates our pending changes into SQL and executes them against the database.</p>
+<p>This means we can make multiple changes and commit them all at once in a single transaction.</p>
+<p>Also remember, whenever you make changes to entities, always call <code>SaveChangesAsync</code> to persist them in the database.</p>
+<h3 id="update">Update</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;Ok&lt;Category&gt;, ProblemHttpResult&gt;&gt; Update(int <span class="hljs-built_in">id</span>, Category updatedCategory, LibraryDbContext dbContext)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(updatedCategory.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var existingCategory = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingCategory == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(category =&gt; category.Id != <span class="hljs-built_in">id</span> &amp;&amp; category.Name == updatedCategory.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{updatedCategory.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    existingCategory.Name = updatedCategory.Name;
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(existingCategory);
+}
+</div></code></pre>
+<p>We will use <code>FindAsync</code> to retrieve the category by <code>Id</code>.</p>
+<p>Let's also update the <code>DuplicateName</code> check to use an <code>async</code>.</p>
+<p>After we update the <code>Category</code>'s name, we need to save the changes. Entity Framework Core is tracking this entity, meaning it keeps an internal record of what the object looked like when we first retrieved it.</p>
+<p>When we call <code>SaveChangesAsync</code>, it compares the current state with that original snapshot and generates an update SQL statement for only the columns that actually changed.</p>
+<h3 id="delete">Delete</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Results&lt;NoContent, ProblemHttpResult&gt;&gt; Delete(int <span class="hljs-built_in">id</span>, LibraryDbContext dbContext)
+{
+    var categoryToBeDeleted = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (categoryToBeDeleted == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    dbContext.Categories.Remove(categoryToBeDeleted);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.NoContent();
+}
+</div></code></pre>
+<p>Once we have confirmed the <code>Category</code> exists, we remove it from the <code>DbSet</code> and save the changes.</p>
+<p>Let's run the application and test everything in Scalar.</p>
+<h2 id="updating-authorscontroller-to-use-a-database">Updating AuthorsController to use a database</h2>
+<p>This is very similar to what we did for <code>Categories</code> endpoints, we will ask AI to do it for us.</p>
+<p><strong>Note:</strong> before I did this I committed all of my previous changes to Git.</p>
+<h3 id="prompt">Prompt</h3>
+<blockquote>
+<p>ASP.Net Core 10 Web API:</p>
+<p>Update AuthorsController to use LibraryDbContext instead of _authors list.</p>
+<p>Delete the list and follow the same pattern in Handler methods as CategoriesEndpoints keeping in mind that &gt; AuthorsController is a controller not a minimal API</p>
+</blockquote>
+<p>I have uploaded the changes into my <code>AuthorsController</code>.</p>
+<p>The one major difference between using <code>LibraryDbContext</code> in Controllers versus Minimal API is that in Minimal API, the context is passed as a parameter to each individual method.</p>
+<p>In a controller, we inject it once through the constructor, and then every method in the class has access to it. This is the standard pattern for dependency injection in Controllers.</p>
+<p>In my AI it generated the following code:</p>
+<pre class="hljs"><code><div>...
+private <span class="hljs-built_in">readonly</span> LibraryDbContext _dbContext;
+
+public AuthorsController(LibraryDbContext dbContext)
+{
+    _dbContext = dbContext;
+}
+...
+</div></code></pre>
+<p>There is another way to do this by using a <strong>Primary Constructor</strong>.</p>
+<pre class="hljs"><code><div>...
+[ApiController]
+[Route(<span class="hljs-string">&quot;api/[controller]&quot;</span>)]
+public class AuthorsController(LibraryDbContext dbContext) : ControllerBase
+{
+    ...
+</div></code></pre>
+<p>I will change my code to this but if you don't like primary constructors, you can always use the plain old constructor with a private field.</p>
+<h3 id="getbyid-and-getall">GetById and GetAll</h3>
+<pre class="hljs"><code><div>...
+[HttpGet(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; GetById(int <span class="hljs-built_in">id</span>)
+{
+    var author = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (author == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-built_in">return</span> Ok(author);
+}
+
+[HttpGet()]
+[ProducesResponseType(typeof(List&lt;Author&gt;), StatusCodes.Status200OK)]
+public async Task&lt;ActionResult&lt;List&lt;Author&gt;&gt;&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+{
+    var authors = await dbContext.Authors.ToListAsync();
+    <span class="hljs-built_in">return</span> Ok(authors);
+}
+...
+</div></code></pre>
+<h3 id="create-1">Create</h3>
+<pre class="hljs"><code><div>...
+[HttpPost()]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; Create(Author author)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Authors.AnyAsync(existingAuthor =&gt; existingAuthor.Id == author.Id))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;An author with ID {author.Id} already exists.&quot;</span>,
+            statusCode: StatusCodes.Status409Conflict);
+    }
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, author);
+}
+...
+</div></code></pre>
+<p>This code has a minor issue. Before using the database, the <code>Create</code> endpoint could produce a <strong>409 Conflict</strong> response, because the <code>Id</code> was provided by the user, and it could conflict with an existing <code>Id</code> in this storage. Now, the database assigns <code>Id</code>s, and guarantees they are always unique.</p>
+<p>So this response is no longer possible, and this check is no longer needed. Remove them.</p>
+<h3 id="final-code">Final code</h3>
+<pre class="hljs"><code><div>...
+[HttpPost()]
+[ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; Create(Author author)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, author);
+}
+...
+</div></code></pre>
+<p>Remember, conflict can still happen for <code>Categories</code>, because their names must be unique, and if they are not, <strong>409</strong> is the appropriate response.</p>
+<h3 id="update-1">Update</h3>
+<p>Is basically the same.</p>
+<pre class="hljs"><code><div>...
+[HttpPut(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;Author&gt;&gt; Update(int <span class="hljs-built_in">id</span>, Author author)
+{
+    var existingAuthor = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingAuthor == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(author.FirstName) || string.IsNullOrWhiteSpace(author.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    existingAuthor.FirstName = author.FirstName;
+    existingAuthor.LastName = author.LastName;
+    existingAuthor.YearOfBirth = author.YearOfBirth;
+
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> Ok(existingAuthor);
+}
+...
+</div></code></pre>
+<h3 id="delete-1">Delete</h3>
+<p>Once again, basically the same.</p>
+<pre class="hljs"><code><div>...
+[HttpDelete(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(StatusCodes.Status204NoContent)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&gt; Delete(int <span class="hljs-built_in">id</span>)
+{
+    var authorToBeDeleted = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (authorToBeDeleted == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    dbContext.Authors.Remove(authorToBeDeleted);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> NoContent();
+}
+...
+</div></code></pre>
+<p>Test your endpoints.</p>
+<h3 id="why-do-we-use-a-concrete-dbcontext">Why do we use a concrete DbContext?</h3>
+<p>Looking at our controllers, you might notice something that raises a reasonable question. We are injecting a concrete class, <code>LibraryDbContext</code>, not an interface.</p>
+<p>This goes against the dependency inversion principle, which says we should depend on abstractions, not concrete implementations. So why are we doing this?</p>
+<p>Well, Microsoft simply designed <code>DbContext</code> this way. There is no built-in IDbContext interface to inject instead and this is not an oversight. It is a deliberate design decision.</p>
+<p>A large number of real-world ASP.NET Core applications inject <code>DbContext</code> directly.</p>
+<p>Now, depending on a concrete class rather than an interface usually creates a problem, especially in tests.</p>
+<p>Typically, when we want to test a class in isolation, we replace its dependencies with mocks. Fake implementations that we fully control. But to do that, we need an interface that our mock will implement.</p>
+<p>If we depend on a concrete class, we can't swap it out for mock. In this case, though, it is not a problem in practice, because Entity Framework Core has a built-in in-memory database provider, which allows us to replace the real PostgreSQL database with a lightweight in-memory one during tests.</p>
+<p>This is actually more convenient than manually mocking every database call. And it produces tests that are shorter and easier to read.</p>
+<h3 id="repository-pattern">Repository pattern</h3>
+<p>There is an alternative pattern worth knowing about. Called the <code>Repository</code> pattern. The idea is to introduce an abstraction layer between your business logic and your data source. So instead of talking to the database directly, your code talks to a repository, which handles all the data access behind the scenes. This makes the data source swappable.</p>
+<p>In our case, applying this pattern would mean hiding <code>DbContext</code> behind an interface. For example, <code>IAuthorRepository</code>, so that the controller depends on an interface rather than concrete <code>DbContext</code> implementation. This is doable, but we should skip it.</p>
+<p>The repository pattern is itself complex, and most real-life ASP.NET APIs do not implement it anyway and maybe most notably, <code>DbContext</code> itself is already based on the repository pattern internally.</p>
+<p>Adding another layer on top of that would be more overhead than it is worth.</p>
+<h3 id="summary">Summary</h3>
+<p>Injecting library <code>DbContext</code> directly is a perfectly valid, widely used approach.</p>
+<h2 id="dependency-injection-in-aspnet-core">Dependency Injection in ASP.Net Core</h2>
+<p>Now that we have updated the <code>AuthorsController</code>, let's take a moment to look at something we introduced without fully explaining it.</p>
+<p>There is a question worth asking here.</p>
+<pre class="hljs"><code><div>    ...
+    [ApiController]
+    [Route(<span class="hljs-string">&quot;api/[controller]&quot;</span>)]
+    public class AuthorsController(LibraryDbContext dbContext) : ControllerBase
+    {
+        ...
+</div></code></pre>
+<p>Where does the <code>LibraryDbContext</code> instance actually come from? We never call new <code>AuthorsController</code> anywhere in our code.</p>
+<pre class="hljs"><code><div>    var authorsController = new AuthorsController(...);
+</div></code></pre>
+<p>The controller just gets created somehow, and the <code>LibraryDbContext</code> is already there, ready to use.</p>
+<p>But how? The answer is <strong>Dependency Injection</strong>. This is not a concept specific to .NET. It is a general programming pattern found in practically every modern framework.</p>
+<p>ASP.NET Core has its own built-in <strong>Dependency Injection</strong> container, which covers the needs of most applications without any additional libraries.</p>
+<p>So what problem does dependency injection actually solve?</p>
+<p>Well, without it, our controller would have to create its own <code>LibraryDbContext</code>.</p>
+<p>It would look something like this:</p>
+<pre class="hljs"><code><div>    public <span class="hljs-function"><span class="hljs-title">AuthorsController</span></span>()
+    {
+        _dbContext = new LibraryDbContext(...);
+    }
+</div></code></pre>
+<p>But this is problematic. The controller would need to know how to configure the <code>dbContext</code>, the connection string, the database provider, everything. Remember, this is just one controller. We will have many more classes that need <code>LibraryDbContext</code>.</p>
+<p>So that configuration logic would be scattered across the entire project.</p>
+<p>There is a better solution. We can have a central registry called the <strong>Dependency Injection</strong> container. Think of it as a box with all types our application may need.</p>
+<p><img src="assets/images/dependency-intection-container.jpg" alt="Dependency Injection Container" title="Dependency Injection Container"></p>
+<p>We register our services once, and from this point on, the container knows how to create them. We actually do that already.</p>
+<p>Every call we make on <code>Builder.Services</code> in the <code>Program.cs</code> class is a registration in that container, like putting a new service into that box, making it ready to use.</p>
+<p>Add <code>dbContext</code>, add <code>Controllers</code>, add <code>OpenAPI</code>, all of it goes into the same container. Without that registration, the container doesn't know the service exists and cannot inject it anywhere.</p>
+<p>For example, consider this line:</p>
+<pre class="hljs"><code><div>    builder.Services.AddDbContext&lt;LibraryDbContext&gt;(options =&gt;
+    ...
+</div></code></pre>
+<p>From that point on, whenever any class needs a LibraryDbContext, it simply declares that need as a <strong>Constructor Parameter</strong> in a Controller or as a <strong>Method Parameter</strong> in minimal API. And the container simply delivers it. This is where the word <strong>Inject</strong> in dependency injection comes from. The container injects the dependency into the class that needs it.</p>
+<p>It is worth remembering that every service we register has a specific lifetime.</p>
+<h2 id="service-lifetime">Service lifetime</h2>
+<p>When we register a service, we also tell the container how long its instance should live.</p>
+<p>There are three options.</p>
+<p><strong>Singleton</strong> means one instance for the entire lifetime of the application. Everyone who asks for this service gets the same object. A good example would be an in-memory cache. Something that holds data globally and is meant to be shared across the entire application.</p>
+<p><strong>Transient</strong> means a new instance every time someone asks for it. It is good for lightweight, stateless services. For example, a simple validator that takes some input, checks it, and returns a result.</p>
+<p><strong>Scoped</strong> means we have one instance per HTTP request. Everyone who asks for this service within the same request gets the same instance. When the request ends, the instance is disposed of.</p>
+<p>For example, a <strong>DbContext</strong> should be scoped. It tracks changes to entities during a request, so it should live exactly as long as the request.</p>
+<p>The built-in services are usually configured upfront with the correct lifetime.</p>
+<p>But when we start registering our own services, we will think what lifetime is best for them.</p>
+<p>Let's say we create an <code>IEmailService</code> interface and an <code>EmailService</code> class that implements it.</p>
+<pre class="hljs"><code><div>    public interface IEmailService { }
+
+    Public class EmailService : IEmailService { }
+</div></code></pre>
+<p>This is how we would register it in <code>Program.cs</code> class.</p>
+<pre class="hljs"><code><div>    builder.Services.AddScoped&lt;IEmailService, EmailService&gt;();
+</div></code></pre>
+<p>This tells the container, whenever someone asks for <code>IEmailService</code>, give them an instance of the <code>EmailService</code> class. And then in a Controller, we simply declare that we need this dependency.</p>
+<p>The controller then depends on the interface, not a concrete class.</p>
+<pre class="hljs"><code><div>    public class AuthorsController(LibraryDbContext dbContext, IEmailService emailService) : ControllerBase
+</div></code></pre>
+<p>This means it follows the <strong>Dependency Inversion</strong> principle from solid. This means we can swap the implementation at any time. For example, use a fake EmailService in tests, without touching the controller at all.</p>
+<p>This loose coupling between classes is the real power of dependency injection. We don't have any custom services in our project yet, but we will. And when we get there, this is exactly the pattern we will follow.</p>
+<h2 id="adding-seed-data">Adding seed data</h2>
+<p>When we test our API as developers, it is convenient to already have some data in the database.</p>
+<p>A few Categories, Books, Authors, and so on. This gives us a foundation we can use to run any tests we want.</p>
+<p>We could add this data manually, through the API, or directly in the DBeaver but that has a couple of downsides. First, if we drop and recreate the database for any reason, we lose all of it and have to set it up again from scratch. Second, if a new developer joins the project, they would have to do the same thing, rather than getting a ready-to-use database from the start.</p>
+<p>The solution is <strong>seed data</strong>, a set of initial records that are automatically added to the database when the application starts. We configure it once in our code, and from that point on, even if the database is dropped
+and recreated, the seed data will be there every time the app starts.</p>
+<p>This will be a <strong>development-only</strong> feature. Let's see how this works.</p>
+<p>Create a new static class named <code>DataSeeder</code> in the <code>DataAccess</code> folder. We make it a static class, because it doesn't hold any state. It is just a container for a method we will call once at startup.</p>
+<pre class="hljs"><code><div>public static async Task SeedAsync(IServiceProvider serviceProvider)
+{
+    using var scope = serviceProvider.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService&lt;LibraryDbContext&gt;();
+
+    <span class="hljs-keyword">if</span> (!await dbContext.Authors.AnyAsync())
+    {
+        var authors = new List&lt;Author&gt;
+        {
+            new Author { FirstName = <span class="hljs-string">&quot;George&quot;</span>, LastName = <span class="hljs-string">&quot;Orwell&quot;</span>, YearOfBirth = 1903 },
+            new Author { FirstName = <span class="hljs-string">&quot;Jane&quot;</span>, LastName = <span class="hljs-string">&quot;Austen&quot;</span>, YearOfBirth = 1775 },
+            new Author { FirstName = <span class="hljs-string">&quot;Mark&quot;</span>, LastName = <span class="hljs-string">&quot;Twain&quot;</span>, YearOfBirth = 1835 },
+            new Author { FirstName = <span class="hljs-string">&quot;J.R.R.&quot;</span>, LastName = <span class="hljs-string">&quot;Tolkien&quot;</span>, YearOfBirth = 1892 },
+            new Author { FirstName = <span class="hljs-string">&quot;Ernest&quot;</span>, LastName = <span class="hljs-string">&quot;Hemingway&quot;</span>, YearOfBirth = 1899 }
+        };
+
+        await dbContext.Authors.AddRangeAsync(authors);
+        await dbContext.SaveChangesAsync();
+
+        var categories = new List&lt;Category&gt;
+        {
+            new Category { Name = <span class="hljs-string">&quot;Fiction&quot;</span> },
+            new Category { Name = <span class="hljs-string">&quot;Non-Fiction&quot;</span> },
+            new Category { Name = <span class="hljs-string">&quot;Science Fiction&quot;</span> },
+            new Category { Name = <span class="hljs-string">&quot;Fantasy&quot;</span> },
+            new Category { Name = <span class="hljs-string">&quot;Biography&quot;</span> }
+        };
+
+        await dbContext.Categories.AddRangeAsync(categories);
+        await dbContext.SaveChangesAsync();
+    }
+}        
+</div></code></pre>
+<p>Add the <code>SeedAsync</code> method. As a parameter, we pass an <code>IServiceProvider</code>.</p>
+<p>To understand what it is and why we need it, we need to think about when this method will be called. It will run at application startup, not within any particular HTTP request and since this method writes to the database, it needs a library <code>dbContext</code> but as we just learned, <code>dbContext</code> is a scoped service. It is created at the start of an HTTP request and disposed of at the end.</p>
+<p>But when we call <code>SeedAsync</code>, there is no <strong>HTTP request</strong>. So we need another way to get <code>dbContext</code>.
+That is exactly what <code>IServiceProvider</code> is for. It can create a scope manually, even outside of an HTTP request.</p>
+<p>We create a scope manually and use it to resolve library dbContext.</p>
+<p>The <strong>using</strong> keyword ensures the scope and everything it created, including the <code>dbContext</code>, is properly disposed when we are done.</p>
+<p>Now let's seed some <code>Authors</code>. Before adding anything, we check whether there are already <code>authors</code> in the database. If this returns true, meaning there are no <code>Authors</code>, we will add some.</p>
+<p>If we ever need a clean slate, we can just drop the database and restart.</p>
+<p>Now let's add the <code>Authors</code>. Write a comment describing what I need, and Copilot suggests a list.</p>
+<blockquote>
+<p>// Add a list of 5 well known authors with their FirstName and LastName and YearOfBirth</p>
+</blockquote>
+<p>This will generate them for you. Let's save them to the database. We used <code>AddRangeAsync</code> instead of calling <code>Add</code> multiple times. It is a more convenient way to add multiple records at once.</p>
+<p>Now let's do the same for <code>Categories</code>.</p>
+<p>Finally we wire this up in <code>Program.cs</code>. We only want to call <code>SeedAsync</code> when running in the development environment.</p>
+<p>Delete all existing <code>Authors</code> and <code>Categories</code> so we start with a clean slate.</p>
+<p>Run the application and this will seed the database.</p>
+<p>Every time we start fresh with an empty database, the seed data will be there waiting for us and since this all happens inside the seeder, which is part of our codebase, any developer who joins the team will get this behavior automatically the first time they set up and run the project.</p>
+<h2 id="switching-to-microsoft-sql-server">Switching to Microsoft SQL Server</h2>
+<p>There are 3 things to change.</p>
+<ul>
+<li>The packages.</li>
+<li>1 line in <code>Program.cs</code></li>
+<li>The connection string.</li>
+</ul>
+<p>Let's start with packages.</p>
+<p>First, we remove the PostgreSQL provider:</p>
+<pre class="hljs"><code><div>    dotnet remove Npgsql.EntityFrameworkCore.PostgreSQL
+</div></code></pre>
+<p>Install the SQL Server provider:</p>
+<pre class="hljs"><code><div>    dotnet add package Microsoft.EntityFrameworkCore.SQLServer
+</div></code></pre>
+<p>Next, <code>Program.cs</code>.</p>
+<p>This is the only line that changes here:</p>
+<pre class="hljs"><code><div>builder.Services.AddDbContext&lt;LibraryDbContext&gt;(options =&gt;
+{
+    options.UseSQLServer(builder.Configuration.GetConnectionString(<span class="hljs-string">&quot;LibraryDb&quot;</span>));
+});
+</div></code></pre>
+<p>And now we need to update the connection string in <code>appsettings.development.json</code>.</p>
+<pre class="hljs"><code><div><span class="hljs-string">&quot;ConnectionStrings&quot;</span>: {
+  <span class="hljs-string">&quot;LibraryDb&quot;</span>: <span class="hljs-string">&quot;Server=localhost,11433;Database=librarydb;Trusted_Connection=True;&quot;</span>
+}
+</div></code></pre>
+<p>The trusted connection equals true means we are using Windows authentication.</p>
+<p>There is one more thing we need to address. Our existing migrations were generated for PostgreSQL.</p>
+<p>They contain PostgreSQL-specific code and will not work correctly with SQL Server. We need to <strong>delete</strong> the migrations folder and generate fresh ones.</p>
+<blockquote>
+<p>dotnet ef migrations add InitialCreate</p>
+</blockquote>
+<p>Now apply the migrations:</p>
+<blockquote>
+<p>dotnet ef database update</p>
+</blockquote>
+<p>Check see if the tables have been added. If successful they should hae your seed data.</p>
+<p>We now have the same API and the same code, but running on a completely different database.</p>
+<p>The only things we changed were two NuGet packages, one line in program.cs and the connection stream.</p>
+<p>You could now revert all the changes back to PostgreSQL by using your version control.</p>
 
 </body>
 </html>
