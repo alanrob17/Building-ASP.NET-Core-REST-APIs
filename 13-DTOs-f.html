@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Data Transfer Objects</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Data Transfer Objects <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+<h1 id="data-transfer-objects">Data Transfer Objects</h1>
+<p>In this section, we will learn what <strong>DTOs</strong> are, why they matter, and what problems they solve.</p>
+<p>We will also cover the best practices around designing them. By the end, we will have DTOs in place for both <code>Categories</code> and <code>Authors</code>, and our endpoints updated to use them.</p>
+<p><img src="assets/images/dtos.jpg" alt="DTOs" title="DTOs"></p>
+<h2 id="the-need-for-dtos">The need for DTOs</h2>
+<p>We have an issue in our code and can fix them with DTOs. Look at the handler for the <strong>POST</strong> method for <code>Authors</code>. It takes an entire author object as a parameter and remember, this type has properties <code>FirstName</code>, <code>LastName</code>, <code>YearOfBirth</code> and, what interests us most right now, <code>Id</code>.</p>
+<p>Now, this is a bit problematic. This is a method that creates an Author record. And it is the database that generates <code>Id</code>s for new records.</p>
+<p>The client should not be responsible for coming up with an Id, especially since they have no way of knowing which ones are already taken. For now it works, but it is confusing and error-prone.</p>
+<p>The OpenAPI documentation still declares that the payload of this request includes an <code>Id</code> field and if the client actually provides one, the database will accept it.</p>
+<p>What we should do instead is pass as a special type that carries all the necessary data, but without the Id field. In our case, that would be just <code>FirstName</code>, <code>LastName</code> and <code>YearOfBirth</code>.</p>
+<p>That special object is called a <em>DTO</em>, a Data Transfer Object. And excluding <code>Id</code> from the request payload is just one of the problems they solve.</p>
+<h2 id="dtos">DTOs</h2>
+<p>There is a lot that is wrong with having our endpoints take or return the exact same types that we save or read from the database. For example, such types often have an <code>Id</code> And why should the client send it with the <strong>POST</strong> request? It's the database's job to set them.</p>
+<p><img src="assets/images/exposing-the-id.jpg" alt="Exposing the Id" title="Exposing the Id"></p>
+<p>That is just the tip of the iceberg. Think about an e-commerce API with a user entity. That entity probably has a hashed password as a field. If we return the entity directly from a getEndpoint, that password goes straight to the client. Every field on the entity is exposed automatically, just by being there. We would have to remember to manually exclude sensitive fields every time.</p>
+<p><img src="assets/images/hashed-passwords.jpg" alt="Exposing the hashed password" title="Exposing the hashed password"></p>
+<p><strong>DTOs</strong> let us deliberately choose what goes into the response for each specific use case. Which means less data fetched from the database, less data serialized, and less data sent over the network.</p>
+<p>Risks also appear when we consider the opposite side. Not the responses, but the requests. It can be dangerous when the client sends more data than they should be allowed to, and our API accepts it. This issue is called <strong>overposting</strong> and it can be a huge security risk.</p>
+<p><img src="assets/images/exposing-issues.jpg" alt="Exposing issues" title="Exposing issues"></p>
+<p><strong>Note:</strong> Validation involves things like requiring certain fields to be present or limiting string lengths. That validation lives on the DTOs, not on the entities. Our internal objects stay clean and focused on what they were designed for.</p>
+<p><img src="assets/images/boundaries.jpg" alt="Boundaries" title="Boundaries"></p>
+<p>An <strong>Entity class</strong> has one job - representing a row in a database. When we use it as the input or output of our endpoints we are asking it to act as a public contract between our API and the outside world. It was never designed for that.</p>
+<p>The solution for these issues is to introduce a separate type whose only responsibility is to carry data
+across the <strong>boundary</strong> amd that type is called a <strong>Data Transfer Object</strong>, or a <strong>DTO</strong>. When the client sends a request, they send a DTO — a simple object containing exactly the fields we want to accept. We map that DTO to an entity and save it to the database.</p>
+<p>When we return data, we go the other direction we take the entity, map it to a DTO, and send that to the client.</p>
+<p>Notice that the DTO going in and the DTO coming out are typically different types. The <strong>Create DTO</strong> and the <strong>Read DTO</strong>.</p>
+<p>The <strong>Create DTO</strong> contains what the client is allowed to send.</p>
+<p>The <strong>Read DTO</strong> contains what we've decided to expose.</p>
+<p>They are two separate concerns, so we need two separate types.</p>
+<p>The mapping steps — converting a DTO to an entity and back — are where you assign fields from one object to the other. It's straightforward, but can get tedious with larger entities. Fortunately, there are libraries that automate this.</p>
+<p>In practice, we typically have more than one DTO per entity.</p>
+<p><img src="assets/images/multiple-dtos.jpg" alt="Multiple DTOs" title="Multiple DTOs"></p>
+<p>DTOs are simple objects. No logic, no behavior, just properties. Their only job is to carry data, but they give us something truly valuable. A clear, intentional <strong>boundary</strong> between what happens inside our system and what the outside world sees.</p>
+<h2 id="introducing-dtos-for-categories">Introducing DTOs for Categories</h2>
+<p>Create a <strong>DTOs</strong> folder. Inside it, create another folder called <strong>Categories</strong>. As we add more entities, each will get its own subfolder here.</p>
+<p>Add a new file called <code>CreateCategoryDTO</code>:</p>
+<pre class="prettyprint"><code><div>    public record CreateCategoryDto
+    {
+        public required string Name { get; init; }
+    }
+</div></code></pre>
+<p>Just one property. No <code>Id</code>. That's the whole point.</p>
+<p>Why even introduce a DTO? Why not just accept a plain string in the endpoint? The short answer is, <code>Categories</code> are simple right now, but they might not stay that way and extending a DTO is trivial. We just add a property.</p>
+<p>We are using a <code>record</code> here rather than a <code>class</code>. Records in C# are designed for types that carry data without behavior, which is exactly what a DTO is. They also give us value equality and immutability out of the box, which are nice properties for objects that cross a boundary and should not be modified after creation.</p>
+<p>We will be using the same structure for all our DTOs.</p>
+<h3 id="updatecategorydto">UpdateCategoryDto</h3>
+<pre class="prettyprint"><code><div>    public record UpdateCategoryDto
+    {
+        public required string Name { get; init; }
+    }
+</div></code></pre>
+<p>And yes, it looks identical to <code>CreateCategoryDTO</code>.</p>
+<h3 id="readcategorydto">ReadCategoryDto</h3>
+<pre class="prettyprint"><code><div>    public record ReadCategoryDto
+    {
+        public int Id { get; init; } 
+        public required string Name { get; init; }
+    }
+</div></code></pre>
+<p><code>ReadCategoryDto</code> is what we will return to the client. This one includes an <code>Id</code>, because when we return data, the client needs to know the <code>Id</code>. For example, to construct a follow-up request.</p>
+<h2 id="updating-the-category-endpoints-to-use-dtos">Updating the Category endpoints to use DTOs</h2>
+<p>Now we will update our Category endpoints to use the <strong>DTOs</strong> we created.</p>
+<h3 id="getbyid">GetById</h3>
+<pre class="prettyprint"><code><div>private static async Task&lt;Results&lt;Ok&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; GetById(int <span class="hljs-built_in">id</span>, LibraryDbContext dbContext)
+{
+    var category = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (category == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    var readDto = new ReadCategoryDto
+    {
+        Id = category.Id,
+        Name = category.Name
+    };
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(readDto);
+}
+</div></code></pre>
+<p>Right now it returns a Category, but we want it to return a <code>ReadCategoryDto</code> instead.</p>
+<p>We will map the <code>Category</code> <strong>manually</strong>, taking the fields from the entity and putting them in the <strong>DTO</strong>.</p>
+<p>This is the mapping step we discussed earlier. Assigning fields from the entity to the DTO. Straightforward, but you can already imagine how this grows with larger entities.</p>
+<h3 id="getall">GetAll</h3>
+<pre class="prettyprint"><code><div>private static async Task&lt;Ok&lt;List&lt;ReadCategoryDto&gt;&gt;&gt; GetAll(LibraryDbContext dbContext)
+{
+    var categories = await dbContext.Categories.ToListAsync();
+
+    var readDto = categories.Select(c =&gt; new ReadCategoryDto
+    {
+        Id = c.Id,
+        Name = c.Name
+    });
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(readDto.ToList());
+}
+</div></code></pre>
+<p>We want to return a list of <code>ReadCategoryDto</code>s instead of a list of <code>Categories</code>.</p>
+<p>We use the <code>Select</code> method from LINQ to map the collection of categories to a collection of <code>ReadCategoryDto</code>s.</p>
+<p>We also need to call the <code>ToList</code> method because <code>Select</code> produces an <code>IEnumerable</code> and we declare that we return a <code>List</code>.</p>
+<h3 id="create">Create</h3>
+<pre class="prettyprint"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Create(CreateCategoryDto createDto, LibraryDbContext dbContext)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(createDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(existingCategory =&gt; existingCategory.Name == createDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{createDto.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    var category = new Category
+    {
+        Name = createDto.Name
+    };
+
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
+
+    var readDto = new ReadCategoryDto
+    {
+        Id = category.Id,
+        Name = category.Name
+    };
+
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(readDto, <span class="hljs-string">&quot;GetCategoryById&quot;</span>, new { <span class="hljs-built_in">id</span> = category.Id });
+}
+</div></code></pre>
+<p>This one changes on both sides. The input becomes <code>CreateCategoryDto</code> and the output becomes  <code>ReadCategoryDto</code>.</p>
+<p>Here we must create a <code>Category</code> entity using the <code>CreateDto</code>.</p>
+<p>And now the opposite. We create a <code>ReadDto</code> using the <code>Category</code> entity.</p>
+<p>Notice the flow.</p>
+<p><img src="assets/images/dto-flow.jpg" alt="DTO flow" title="DTO flow"></p>
+<p>We receive a <code>CreateCategoryDto</code>, map it to a <code>Category</code>, save the entity, and then map the saved entity to a <code>ReadCategoryDto</code> and return that. Now it is completely clear that it is the database that sets the <code>Id</code>.</p>
+<p>It's not present in the <code>CreateDto</code>. It becomes assigned here once we saved this entity. So this is exactly the pattern we discussed earlier.</p>
+<p><code>DTOs</code> carry data across the boundary between our API and the outside world and each time, they carry only the data that is needed.</p>
+<h3 id="update">Update</h3>
+<pre class="prettyprint"><code><div>private static async Task&lt;Results&lt;Ok&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Update(int <span class="hljs-built_in">id</span>, UpdateCategoryDto updateDto, LibraryDbContext dbContext)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(updateDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var existingCategory = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingCategory == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(category =&gt; category.Id != <span class="hljs-built_in">id</span> &amp;&amp; category.Name == updateDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{updateDto.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    existingCategory.Name = updateDto.Name;
+    await dbContext.SaveChangesAsync();
+
+    var readDto = new ReadCategoryDto
+    {
+        Id = existingCategory.Id,
+        Name = existingCategory.Name
+    };
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(readDto);
+}
+</div></code></pre>
+<p>The input becomes <code>UpdateCategoryDto</code> and the return type becomes ReadCategoryDto.</p>
+<h3 id="delete">Delete</h3>
+<p>This one only takes the <code>Id</code> and doesn't return any data, so no changes are needed here.</p>
+<h3 id="summary">Summary</h3>
+<p>Every piece of data coming in from the client now arrives as a <strong>DTO</strong>.</p>
+<p>Every piece of data going out to the client leaves as a <strong>DTO</strong>.</p>
+<p>The entity <strong>never crosses</strong> that boundary it lives entirely inside our system, moving between the endpoint and the database. The endpoint itself is where these two words meet. It receives a DTO, converts it to an entity to work with the database, and when it's done, converts the result back to a DTO before sending it out.</p>
+<p>That separation is what gives us control over what the client can send, over what we expose, and over how our internal model can evolve without breaking the contract.</p>
+<p>Run the application to make sure everything works as expected.</p>
+<p>Look at the <strong>POST</strong> endpoint for <code>Categories</code>.</p>
+<p><img src="assets/images/post-using-dto.jpg" alt="Post using a DTO" title="Post using a DTO"></p>
+<p>The request body now shows only <code>Name</code>. No <code>Id</code> field anywhere and the response shows both <code>Id</code> and <code>Name</code>, coming from our <code>ReadCategoryDto</code>.</p>
+<p>Clean, explicit, and exactly what we designed.</p>
+<h2 id="one-dto-per-operation">One DTO per operation</h2>
+<p>There are two approaches to reducing duplication between DTO classes and there are reasons we are going to avoid both of them.</p>
+<p>If you look at our three DTOs, you will notice some significant similarities.</p>
+<p><code>CreateCategoryDto</code> and <code>UpdateCategoryDto</code> are identical.</p>
+<p>Both have just a name property and <code>ReadCategoryDto</code> is almost the same, just with an extra <code>Id</code> field.</p>
+<p>Let's look at the two ideas that might come to mind.</p>
+<p>The first one is this. Why have two separate types for create and update if they look the same? Maybe we can just use one.</p>
+<p>A single category input DTO for both post and put endpoints. It would work, but it would create a hidden problem.</p>
+<p><code>Create</code> and <code>Update</code> operations often start out looking the same, but then they diverge. Maybe at some point we decide that the <code>Create</code> endpoint should accept a field that only makes sense at creation time, while the <code>Update</code> endpoint needs something like a last modified reason.</p>
+<p>The moment that happens, our shared type starts accumulating properties that only make sense for one of the two operations and the other endpoint is stuck carrying fields it doesn't need and shouldn't expose.</p>
+<p>What started as a clean simplification becomes a type that serves two masters and does neither job well.</p>
+<p>There is another risk. It becomes easy to forget that the same type is being used in <strong>two different contexts</strong>. A developer modifying it for one operation may not realize they are affecting the other.</p>
+<p>There is also a <strong>clarity issue</strong>.</p>
+<p>Separate well-named types, <code>CreateCategoryDto</code>, <code>UpdateCategoryDto</code>, make the intent obvious at a glance.</p>
+<p>The second approach is related to inheritance.</p>
+<p><code>ReadCategoryDto</code> looks like an extended version of the other two. It has everything they have plus Id.</p>
+<p>So why not make CreateCategoryDto and UpdateCategoryDto inherit from some base type and then have ReadCategoryDto extended further?</p>
+<p>This looks clean, but it introduces <strong>coupling</strong> between types that should be completely independent.</p>
+<p>If we add a property to the base class, all DTOs inherit it, whether they want it or not. So we are back to completely independent, although duplicated types.</p>
+<p>Certain projects take different approaches here. Some use the same type for create and update, others use a common base type.</p>
+<p>Both can work, but they tend to raise the same discussion and doubts every time requirements evolve.</p>
+<p>In many of those projects, the developers eventually split the types into independent ones anyway.</p>
+<p>This is the approach most experienced developers consider the safest one.</p>
+<h3 id="approach-to-take">Approach to take</h3>
+<p>We will stick to <strong>duplication</strong> here, with full awareness of what it costs. So our approach will be simple.</p>
+<ul>
+<li>One DTO per operation.</li>
+<li>No shared base classes, no merging.</li>
+</ul>
+<p>If two DTOs look the same today, that's fine. If they diverge tomorrow, we will be glad they were always separate.</p>
+<h2 id="updating-the-authorscontroller-to-use-dtos">Updating the AuthorsController to use DTOs</h2>
+<p>Let's add DTOs for the <code>Authors</code> resource and update the <code>AuthorsController</code> to use them.</p>
+<p>We will also practice using GitHub Copilot agent mode.</p>
+<p>We need to create three DTO classes and then update the controller to use them instead of the <code>Author</code> entity directly. And because this is a task we already fully understand, it's a good moment to let Copilot handle it.</p>
+<p>What is agent mode?</p>
+<p>In a regular Copilot chat, you guide the conversation step by step. You provide context, get a suggestion, apply it, move to the next file. Agent mode works differently.</p>
+<p>You give Copilot a high-level task, and it figures out on its own which files to open, what changes to make, and in what order. It can build the solution and react to errors.</p>
+<p>You stay in control. You review and approve everything. But the driving is done by Copilot.</p>
+<p>So let's switch the mode from <code>Ask</code> to <code>Agent</code>.</p>
+<h3 id="prompt-using-agent-mode">Prompt using Agent mode</h3>
+<p><em>Create DTOs for The Author entity following the exact same patterns as the Category DTOs in DTOs/Categories.</em></p>
+<h3 id="createauthordto">CreateAuthorDto</h3>
+<pre class="prettyprint"><code><div>    public record CreateAuthorDto
+    {
+        public required string FirstName { get; init; }
+        public required string LastName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<h3 id="readauthordto">ReadAuthorDto</h3>
+<pre class="prettyprint"><code><div>    public record ReadAuthorDto
+    {
+        public int Id { get; init; }
+        public required string FirstName { get; init; }
+        public required string LastName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<h3 id=""></h3>
+<pre class="prettyprint"><code><div>    public record UpdateAuthorDto
+    {
+        public required string FirstName { get; init; }
+        public required string LastName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>Before we accept anything, we need to review what it actually did.</p>
+<p>Notice an interesting thing about <code>UpdateAuthorDto</code>. All fields except the optional year of birth are required. Just like in <code>CreateAuthorDto</code>. This reflects the semantics of a <strong>PUT</strong> request. The client is not saying change this one field. They are saying replace the resource with what I'm sending. This means all fields must be present every time.</p>
+<p>If we wanted to support partial updates, sending only the fields that changed, we would use a different HTTP method called <strong>PATCH</strong>.</p>
+<p>Now let's look at completing controller changes.</p>
+<h3 id="prompt">Prompt</h3>
+<p><em>Using the DTOs created for the Author entity and following the exact same patterns as the CategoriesEndpoints update the Controllers/AuthorsController to use the DTOs. Please note that we are using a Controller.</em></p>
+<h3 id="getall-1">GetAll</h3>
+<pre class="prettyprint"><code><div>[HttpGet()]
+[ProducesResponseType(typeof(List&lt;ReadAuthorDto&gt;), StatusCodes.Status200OK)]
+public async Task&lt;ActionResult&lt;List&lt;ReadAuthorDto&gt;&gt;&gt; <span class="hljs-function"><span class="hljs-title">GetAll</span></span>()
+{
+    var authors = await dbContext.Authors.ToListAsync();
+    var readDtos = authors.Select(a =&gt; new ReadAuthorDto
+    {
+        Id = a.Id,
+        FirstName = a.FirstName,
+        LastName = a.LastName,
+        YearOfBirth = a.YearOfBirth
+    });
+
+    <span class="hljs-built_in">return</span> Ok(readDtos.ToList());
+}
+</div></code></pre>
+<h3 id="getbyid-1">GetById</h3>
+<pre class="prettyprint"><code><div>[HttpGet(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; GetById(int <span class="hljs-built_in">id</span>)
+{
+    var author = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (author == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    var readDto = new ReadAuthorDto
+    {
+        Id = author.Id,
+        FirstName = author.FirstName,
+        LastName = author.LastName,
+        YearOfBirth = author.YearOfBirth
+    };
+
+    <span class="hljs-built_in">return</span> Ok(readDto);
+}
+</div></code></pre>
+<h3 id="create-1">Create</h3>
+<pre class="prettyprint"><code><div>[HttpPost()]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Create(CreateAuthorDto createDto)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(createDto.FirstName) || string.IsNullOrWhiteSpace(createDto.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var author = new Author
+    {
+        FirstName = createDto.FirstName,
+        LastName = createDto.LastName,
+        YearOfBirth = createDto.YearOfBirth
+    };
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    var readDto = new ReadAuthorDto
+    {
+        Id = author.Id,
+        FirstName = author.FirstName,
+        LastName = author.LastName,
+        YearOfBirth = author.YearOfBirth
+    };
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, readDto);
+}
+</div></code></pre>
+<h3 id="update-1">Update</h3>
+<pre class="prettyprint"><code><div>[HttpPut(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Update(int <span class="hljs-built_in">id</span>, UpdateAuthorDto updateDto)
+{
+    var existingAuthor = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingAuthor == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (string.IsNullOrWhiteSpace(updateDto.FirstName) || string.IsNullOrWhiteSpace(updateDto.LastName))
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: <span class="hljs-string">&quot;First name and last name are required.&quot;</span>,
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    existingAuthor.FirstName = updateDto.FirstName;
+    existingAuthor.LastName = updateDto.LastName;
+    existingAuthor.YearOfBirth = updateDto.YearOfBirth;
+
+    await dbContext.SaveChangesAsync();
+
+    var readDto = new ReadAuthorDto
+    {
+        Id = existingAuthor.Id,
+        FirstName = existingAuthor.FirstName,
+        LastName = existingAuthor.LastName,
+        YearOfBirth = existingAuthor.YearOfBirth
+    };
+
+    <span class="hljs-built_in">return</span> Ok(readDto);
+}
+</div></code></pre>
+<p><strong>Note:</strong> the naming convention for DTO variables is what we established.</p>
+<p>Let's verify everything works by testing it in Scalar.</p>
+
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>
