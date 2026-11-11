@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>14-Mapping.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="mapping">Mapping</h1>
+<h2 id="the-problem-with-mapping">The problem with Mapping</h2>
+<p>In our current code we are using manual mapping between entities and DTOs. This doesn't scale well and why we need a better solution.</p>
+<p><img src="assets/images/manual-mapping.jpg" alt="Manual mapping" title="Manual mapping"></p>
+<p>Our author's controller works. The endpoints return the right data.</p>
+<p>But if we look at the code more carefully, there is something worth addressing.</p>
+<p>The Create method is a good example. First, we take the incoming <code>CreateAuthorDto</code> and map it to an <code>Author</code> entity, copying <code>FirstName</code>, <code>LastName</code> and <code>YearOfBirth</code> one by one.</p>
+<p>We then save this entity to the database. Then after saving, we go the other direction.</p>
+<p>We take the <code>Author</code> entity that now has a database assigned Id and we manually build a ReadAuthorDto from it to return it in the response. Same properties, copy it again.</p>
+<p>So in a single method, we have <strong>two mapping blocks</strong> and this is just for one endpoint.</p>
+<p>If we look at GetAll, GetById and Update, we find the same ReadAuthorDto construction repeated in each of them.</p>
+<p>That is a lot of repetition for one entity. And as we add more entity types to the project, <code>Book</code>, <code>Member</code>, <code>Loan</code>, each more complex than <code>Author</code>, the amount of manual mapping code will grow quickly And keeping it all consistent will become a real problem. The real risk here is maintenance.</p>
+<p>If we add a new property to author, say a <code>Biography</code> field, we need to remember to update every single mapping block.</p>
+<p>What we need is a way to define the mapping between an entity and a DTO once, in one place, so we can then just use it everywhere.</p>
+<p>We could write such a mechanism by hand, but that is exactly what mapping libraries are designed to do.</p>
+<h2 id="introducing-mapperly">Introducing Mapperly</h2>
+<p>For a long time, the most popular mapping library in the .NET ecosystem was <strong>AutoMapper</strong>. It worked well, but some time ago its licensing model changed. As a result, more and more teams have been moving away from it.</p>
+<p><strong>Mapperly</strong> has emerged as a strong alternative.</p>
+<p><strong>AutoMapper</strong> works at runtime. It uses reflection to figure out how to map properties when the application is running.</p>
+<p><strong>Mapperly</strong> takes a different approach. It generates the mapping code at compile time.</p>
+<p>This means it is faster, and more importantly, errors show up during compilation rather than at runtime.</p>
+<h3 id="installing-mapperly">Installing Mapperly</h3>
+<pre class="hljs"><code><div>    dotnet add package Riok.Mapperly
+</div></code></pre>
+<p>Now, let's add a new folder called <code>Mapping</code> to the project.</p>
+<p>Add a new class called <code>AuthorMapper</code>.</p>
+<p>To tell <code>Mapperly</code> that this is a Mapper class, we add the <code>Mapper</code> attribute.</p>
+<pre class="hljs"><code><div>using Riok.Mapperly.Abstractions;
+
+namespace LibraryManagement.Api.Mapping
+{
+    [Mapper]
+    public class AuthorMapper
+    {
+    }
+}
+</div></code></pre>
+<p>Now let's declare the first mapping method.</p>
+<p>From <code>Author</code> to <code>ReadAuthorDto</code>.</p>
+<pre class="hljs"><code><div>    public partial ReadAuthorDto ToReadDto(Author <span class="hljs-built_in">source</span>);
+</div></code></pre>
+<p>This is how Mapperly works. We declare the method signature, the input and the output, and Mapperly generates the implementation for us at compile time.</p>
+<p>The partial keyword is what makes this possible. In C#, a partial method is a method split into two parts. One declares the <strong>signature</strong>, and the other provides the <strong>body</strong>.</p>
+<p>You could write both parts yourself, but the most typical use case is exactly what we are doing here.</p>
+<p>The developer declares the signature, and a tool generates the body.</p>
+<p>Partial methods can only exist in partial classes, so classes that are defined in more than one file.</p>
+<p>So we need to add the partial modifier to this class as well.</p>
+<pre class="hljs"><code><div>    [Mapper]
+    public partial class AuthorMapper
+    {
+        public partial ReadAuthorDto ToReadDto(Author <span class="hljs-built_in">source</span>);
+    }
+</div></code></pre>
+<p>Right now this doesn't compile. The compiler sees a partial method declaration without a corresponding body. That is expected. The body will be generated by Mapperly, but it needs to build the project first to do so. Let's save and build. And now it compiles.</p>
+<p>We can inspect the generated code by holding CTRL and clicking on the method name (or F12).</p>
+<pre class="hljs"><code><div>// &lt;auto-generated /&gt;
+<span class="hljs-comment">#nullable enable</span>
+namespace LibraryManagement.Api.Mapping
+{
+    public partial class AuthorMapper
+    {
+        [global::System.CodeDom.Compiler.GeneratedCode(<span class="hljs-string">&quot;Riok.Mapperly&quot;</span>, <span class="hljs-string">&quot;4.3.1.0&quot;</span>)]
+        public partial global::LibraryManagement.Api.DTOs.Authors.ReadAuthorDto ToReadDto(global::LibraryManagement.Api.Entities.Author <span class="hljs-built_in">source</span>)
+        {
+            var target = new global::LibraryManagement.Api.DTOs.Authors.<span class="hljs-function"><span class="hljs-title">ReadAuthorDto</span></span>()
+            {
+                Id = source.Id,
+                FirstName = source.FirstName,
+                LastName = source.LastName,
+                YearOfBirth = source.YearOfBirth,
+            };
+            <span class="hljs-built_in">return</span> target;
+        }
+    }
+}
+</div></code></pre>
+<p>The generated code maps author to ReadAuthorDto property by property. Exactly the code we have been writing by hand until now. Mapperly simply looks at the property names on both types, and connects them automatically.</p>
+<p>Let's add the second mapping.</p>
+<p>From <code>CreateAuthorDto</code> to <code>Author</code>.</p>
+<pre class="hljs"><code><div>    public partial Author ToEntity(CreateAuthorDto <span class="hljs-built_in">source</span>);
+</div></code></pre>
+<p>Every time we change something in the Mapper classes, we must remember to build the solution.</p>
+<p>We will need one more mapping for the <code>Update</code> case. We'll get to this later.</p>
+<h4 id="authormapper">AuthorMapper</h4>
+<pre class="hljs"><code><div>using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.Entities;
+using Riok.Mapperly.Abstractions;
+
+namespace LibraryManagement.Api.Mapping
+{
+    [Mapper]
+    public partial class AuthorMapper
+    {
+        public partial ReadAuthorDto ToReadDto(Author <span class="hljs-built_in">source</span>);
+        public partial Author ToEntity(CreateAuthorDto <span class="hljs-built_in">source</span>);
+    }
+}
+</div></code></pre>
+<h2 id="using-the-mapper-in-authorscontroller">Using the Mapper in AuthorsController</h2>
+<p>We now want to get Mapperly working to replace all manual mapping code.</p>
+<p>First, we need to register the new mapper in <code>Program.cs</code>.</p>
+<pre class="hljs"><code><div>    builder.Services.AddDbContext&lt;LibraryDbContext&gt;(options =&gt;
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString(<span class="hljs-string">&quot;LibraryDb&quot;</span>));
+    });
+
+    builder.Services.AddScoped&lt;AuthorMapper&gt;();
+
+    builder.Services.AddRouting(options =&gt;
+    ...
+</div></code></pre>
+<p><code>AddScoped()</code> means a new instance of <code>AuthorMapper</code> is created once per HTTP request and shared within that request. This is the right choice for a mapper.</p>
+<p>It has no state on its own, so there is no risk in sharing it, and creating one instance per request is efficient enough for our purposes.</p>
+<p>Now let's inject it into the Controller.</p>
+<pre class="hljs"><code><div>[ApiController]
+[Route(<span class="hljs-string">&quot;api/[controller]&quot;</span>)]
+public class AuthorsController(LibraryDbContext dbContext, AuthorMapper mapper) : ControllerBase
+...
+</div></code></pre>
+<p>We will add it as the primary constructor parameter.</p>
+<p>Because we registered <code>AuthorMapper</code> in <strong>DI container</strong>, ASP.NET Core will automatically provide the right instance whenever <code>AuthorsController</code> is created.</p>
+<h3 id="getbyid">GetById</h3>
+<p>Instead of building the DTO manually, we will now call the mapper.</p>
+<pre class="hljs"><code><div>...
+    var readDto = mapper.ToReadDto(author);
+
+    <span class="hljs-built_in">return</span> Ok(readDto);
+}
+</div></code></pre>
+<h3 id="getall">GetAll</h3>
+<p>It follows the same idea, just for the collection of authors. Much cleaner.</p>
+<pre class="hljs"><code><div>    ...
+        var authors = await dbContext.Authors.ToListAsync();
+        var readDtos = authors.Select(author =&gt; mapper.ToReadDto(author)).ToList();    
+
+        <span class="hljs-built_in">return</span> Ok(readDtos);
+    ...
+</div></code></pre>
+<p>We can even make it shorter, like this.</p>
+<pre class="hljs"><code><div>    var readDtos = authors.Select(mapper.ToReadDto).ToList();
+</div></code></pre>
+<p>Just use the syntax that you find most readable.</p>
+<h3 id="create">Create</h3>
+<p>This is where we have two mapping blocks, and we need to replace both.</p>
+<p>First, we map the incoming DTO to an entity.</p>
+<pre class="hljs"><code><div>    var author = mapper.ToEntity(createDto);
+</div></code></pre>
+<p>Then after saving, we map the entity back to a ReadAuthorDTO for the response.</p>
+<pre class="hljs"><code><div>    var readDto = mapper.ToReadDto(author);
+</div></code></pre>
+<p>Look how much shorter this method now is.</p>
+<h3 id="update">Update</h3>
+<p>Here we run into something slightly different. We are not creating a new <code>Author</code> object. We are modifying an existing one.</p>
+<p>When we fetch an entity from the database, Entity Framework keeps track of it internally.</p>
+<p><img src="assets/images/tracked-entity.jpg" alt="Tracked entity" title="Tracked entity"></p>
+<p>This means that when we call <code>SaveChangesAsync</code>, Entity Framework Core automatically detects any changes
+made to that object and generates the appropriate <strong>SQL UPDATE</strong> statement.</p>
+<p>If we used <code>ToEntity</code> here, we would get a brand new object that Entity Framework Core knows nothing about and the update would not work correctly.</p>
+<p>What we need is a method that takes the existing author object and overwrites its properties with the values from the DTO, in place, without creating a new object.</p>
+<p>Let's add that method to AuthorMapper.</p>
+<pre class="hljs"><code><div>    public partial void UpdateEntity(UpdateAuthorDto <span class="hljs-built_in">source</span>, Author target);
+</div></code></pre>
+<p>Let's build the solution.</p>
+<p>Notice two things here. First, this method returns <strong>void</strong>. It doesn't create anything. It just modifies the object we pass in.</p>
+<p>Second, Mapper re-figures out the direction of mapping from the method signature.</p>
+<p><strong>Source</strong> is the DTO we are reading from and <strong>target</strong> is the author object we are updating.</p>
+<p>We can now use it in the Update method.</p>
+<pre class="hljs"><code><div>    ...
+    mapper.UpdateEntity(updateDto, existingAuthor);
+
+    await dbContext.SaveChangesAsync();
+
+    var readDto = mapper.ToReadDto(existingAuthor);
+
+    <span class="hljs-built_in">return</span> Ok(readDto);
+...
+</div></code></pre>
+<p>By the way, whether having a variable like this makes the code more readable is a personal choice. This code would be equally readable if we used it like this.</p>
+<pre class="hljs"><code><div>    ...
+    mapper.UpdateEntity(updateDto, existingAuthor);
+
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> Ok(mapper.ToReadDto(existingAuthor));
+...
+</div></code></pre>
+<p>Do the same for the other methods.</p>
+<p>Test your code in Scalar.</p>
+<h2 id="mapperly---handling-more-complex-cases">Mapperly - Handling more complex cases</h2>
+<p>We will look at two situations where the default Mapperly behavior needs a little extra configuration, unmatched properties and different property names.</p>
+<h3 id="unmatched-properties">Unmatched properties</h3>
+<p>If we look at the warnings in our project right now, we will see this.</p>
+<p><img src="assets/images/warnings.jpg" alt="Warnings" title="Warnings"></p>
+<p>The member <code>Id</code> on the mapping target type author was not found on the mapping source type <code>CreateAuthorDto</code>. And the same for <code>Update</code>.</p>
+<p>This is actually a very valuable warning.</p>
+<p>Mapperly is telling us that author has an <code>Id</code> property, but <code>CreateAuthorDto</code> does not.</p>
+<p><img src="assets/images/target-source-mismatch.jpg" alt="Target source mismatch" title="Target source mismatch"></p>
+<p>So when building an <code>Author</code> from the DTO, we can expect to have one property missing.</p>
+<p>Such warnings will happen every time we add a new property to an entity, but forget to update the corresponding DTO. In this case, Mapperly will give us a warning.</p>
+<p>In this particular case, the warning is expected. Id is generated by the database, so we never include it in the <code>CreateAuthorDto</code>. We just need to tell Mapperly to leave it alone.</p>
+<p>We do that with <code>MapperIgnoreTarget</code> attribute.</p>
+<p><code>MapperIgnoreTarget</code> tells Mapperly not to populate the <code>Id</code> property on the <strong>target</strong> object.</p>
+<p>In our case, the <code>Author</code>. When we set it, Mapperly stops looking for a matching <strong>source</strong> property.</p>
+<pre class="hljs"><code><div>[Mapper]
+public partial class AuthorMapper
+{
+    public partial ReadAuthorDto ToReadDto(Author <span class="hljs-built_in">source</span>);
+
+    [MapperIgnoreTarget(nameof(Author.Id))]
+    public partial Author ToEntity(CreateAuthorDto <span class="hljs-built_in">source</span>);
+
+    [MapperIgnoreTarget(nameof(Author.Id))]
+    public partial void UpdateEntity(UpdateAuthorDto <span class="hljs-built_in">source</span>, Author target);
+}
+</div></code></pre>
+<p>So the warning is gone.</p>
+<p>Id of the <code>Author</code> stays at its default value of 0. The database will assign the correct value when we save.</p>
+<p>We still have the same situation for <code>Update</code>.</p>
+<p>So we also need the same attribute at the <code>UpdateEntity</code> method, since Author is also the <strong>target</strong> there.</p>
+<p>There is also a counterpart of this attribute, <code>MapperIgnoreSource</code>, which works in the other direction.</p>
+<p>Instead of ignoring a property on the <strong>target</strong>, it tells Mapperly to ignore a property on the <strong>source</strong>, and not map it anywhere.</p>
+<p>A typical use case would be an internal field of an DTO, for example, a Client timestamp that we use for logging purposes only. The syntax is identical, just with the <strong>source</strong> property name instead.</p>
+<h3 id="mismatched-property-names">Mismatched property names</h3>
+<p>Now let's look at the second situation when some configuration may be needed.</p>
+<p>Mismatched property names.</p>
+<p>Our <code>ReadAuthorDto</code> currently has a property called <code>LastName</code>, which matches the entity perfectly.</p>
+<p>But let's say we decided to rename it to <code>FamilyName</code> in the <strong>DTO</strong>.</p>
+<pre class="hljs"><code><div>    public record ReadAuthorDto
+    {
+        public int Id { get; init; }
+        public required string FirstName { get; init; }
+        public required string FamilyName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>Let's try to build. This time the project doesn't compile.</p>
+<p>We get an error saying that <code>FamilyName</code> is <strong>required</strong> on the target, but was not found in the <strong>source</strong>.</p>
+<p>That is because <code>FamilyName</code> is marked as <strong>required</strong> in the DTO.</p>
+<p>Let's remove the <strong>required</strong> modifier for now, so we can see what happens without it.</p>
+<p>Now it builds, but we get a warning. The target, which is <code>ReadAuthorDto</code>, has a <strong>FamilyName</strong> property, but it wasn't found on the <strong>source</strong>.</p>
+<p>Let's see the consequences of that in Scalar.</p>
+<p><img src="assets/images/null-family-names.jpg" alt="Null Family names" title="Null Family names"></p>
+<p>All those authors have no <code>FamilyName</code>.</p>
+<p>This is because Mapperly tried to find such a property on the source, but it couldn't find it, so it simply left it empty on the target.</p>
+<p><img src="assets/images/target-source-mismatch-2.jpg" alt="Target source mismatch" title="Target source mismatch"></p>
+<p>This is exactly the kind of silent bug that is easy to miss.</p>
+<p>We can fix that by telling Mapperly that a property of a given name from the source maps to a property of a different name in the target.</p>
+<p>To do that, we can use the MapProperty attribute.</p>
+<pre class="hljs"><code><div>    [MapProperty(nameof(Author.LastName), nameof(ReadAuthorDto.FamilyName))]
+    public partial ReadAuthorDto ToReadDto(Author <span class="hljs-built_in">source</span>);
+</div></code></pre>
+<p>The first argument is the property name on the <strong>source</strong>, <code>LastName</code> on <code>Author</code>.</p>
+<p>The second argument is the property name on the <strong>target</strong>, <code>FamilyName</code> on <code>ReadAuthorDto</code>.</p>
+<p>This explicitly tells Mapperly to take the value from <code>LastName</code> and put it into <code>FamilyName</code>.</p>
+<p>The warnings from Mapperly are gone.Let's make sure the endpoint works as expected.</p>
+<p><img src="assets/images/correct-family-names.jpg" alt="Correct Family names" title="Correct Family names"></p>
+<p>The family names are now properly set.</p>
+<p>This difference in property names was just an example, so let's revert it.</p>
+<h2 id="using-the-mapper-for-categories">Using the Mapper for Categories</h2>
+<p>We will now add a mapper for <code>Categories</code> and use it in the <code>Categories</code> endpoint.</p>
+<p>Make a copy of <code>AuthorsMapper</code> and add it to <code>CategoriesMapper</code> then rename the entities.</p>
+<p>Let's build the solution, so Mapperly can generate the implementations.</p>
+<p>Now let's update Categories endpoints to use the mapper.</p>
+<p>Since we already know what to do, this is a good moment to use AI.</p>
+<h3 id="prompt">Prompt</h3>
+<blockquote>
+<p>Update Categories endpoints to use the CategoryMapper for all mapping, instead of manual property assignment. Use AuthorsController as a reference for how the mapper should be used.</p>
+</blockquote>
+<p>Results:</p>
+<h3 id="programcs">Program.cs</h3>
+<pre class="hljs"><code><div>    builder.Services.AddScoped&lt;AuthorMapper&gt;();
+    builder.Services.AddScoped&lt;CategoryMapper&gt;();
+</div></code></pre>
+<h3 id="categoriesendpoints">CategoriesEndpoints</h3>
+<pre class="hljs"><code><div>private static async Task&lt;Ok&lt;List&lt;ReadCategoryDto&gt;&gt;&gt; GetAll(LibraryDbContext dbContext, CategoryMapper mapper)
+{
+    var categories = await dbContext.Categories.ToListAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(categories.Select(mapper.ToReadDto).ToList());
+}
+
+private static async Task&lt;Results&lt;Ok&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; GetById(int <span class="hljs-built_in">id</span>, LibraryDbContext dbContext, CategoryMapper mapper)
+{
+    var category = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+    <span class="hljs-keyword">if</span> (category == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(mapper.ToReadDto(category));
+}
+
+private static async Task&lt;Results&lt;CreatedAtRoute&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Create(CreateCategoryDto createDto, LibraryDbContext dbContext, CategoryMapper mapper)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(createDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(existingCategory =&gt; existingCategory.Name == createDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{createDto.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    var category = mapper.ToEntity(createDto);
+
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(mapper.ToReadDto(category), <span class="hljs-string">&quot;GetCategoryById&quot;</span>, new { <span class="hljs-built_in">id</span> = category.Id });
+}
+
+private static async Task&lt;Results&lt;Ok&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Update(int <span class="hljs-built_in">id</span>, UpdateCategoryDto updateDto, LibraryDbContext dbContext, CategoryMapper mapper)
+{
+    <span class="hljs-keyword">if</span> (string.IsNullOrEmpty(updateDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: <span class="hljs-string">&quot;Category name is required.&quot;</span>,
+                statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var existingCategory = await dbContext.Categories.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingCategory == null)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;Category with Id {id} not found.&quot;</span>,
+                statusCode: StatusCodes.Status404NotFound);
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(category =&gt; category.Id != <span class="hljs-built_in">id</span> &amp;&amp; category.Name == updateDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{updateDto.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    mapper.UpdateEntity(updateDto, existingCategory);
+
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.Ok(mapper.ToReadDto(existingCategory));
+}
+</div></code></pre>
+<p>The easiest way to review the changes is to use a <strong>Git diff</strong>. Go to the <code>Git Changes</code> tab.</p>
+<p>Right-click on the file and select compare with unmodified.</p>
+<p><img src="assets/images/git-diff.jpg" alt="Using Git diff" title="Using Git diff"></p>
+<p>And here is a side-by-side <strong>diff</strong> of the changes.</p>
+<p>The first noticeable difference is that in minimal APIs, the mapper is injected as a <strong>method parameter</strong>, rather than into a <strong>constructor</strong>.</p>
+<p>This is typical for minimal APIs.</p>
+<p>Test your code in Scalar.</p>
+
+</body>
+</html>
