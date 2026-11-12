@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>15-Validation.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="validation">Validation</h1>
+<p>Validation is about protecting our application from bad data.</p>
+<p><img src="assets/images/validation.jpg" alt="Using validation" title="Using validation"></p>
+<p>A client sends a request with a missing field, a value in the wrong format, or a number that makes no sense in context. Without validation, that data goes straight into our database, and the problems it causes often only show up much later,</p>
+<p>Our controllers already have some basic validation in place.</p>
+<p>Let's think about what we are not covering.</p>
+<p>For example, let's think about the <code>YearOfBirth</code> property on the author. Nothing stops a client from sending a value of minus 10,000 or 10,000. That request will pass through our handler and get saved to the database without any complaint.</p>
+<p>We could add a check for that, but that is exactly where things start to get messy.</p>
+<p>Look at what we already have for <code>FirstName</code> and <code>LastName</code>. That check appears in the <code>Create</code> method and then again in the <code>Update</code> method, written the same way twice.</p>
+<p>If we change validation rules we have to change every manual check we have in place.</p>
+<p>So what do we actually want from a good validation approach? Well, three things.</p>
+<p><img src="assets/images/validation-done-right.jpg" alt="Validation done right" title="Validation done right"></p>
+<h2 id="validation-with-data-annotations">Validation with Data Annotations</h2>
+<p>We will learn how to validate incoming requests in a controller using data annotations.</p>
+<p>When we run a <strong>POST</strong> request with an empty author name We enter the <code>Create</code> method, even though the <strong>request data</strong> is clearly invalid. This is wasteful. We are running handler code for a request we know is wrong.</p>
+<p>Ideally, bad requests should be rejected as early as possible, before any of that happens.</p>
+<p>The approach we are going to use for controllers is called <strong>data annotations</strong>.</p>
+<p>Attributes from the <code>System.ComponentModel.DataAnnotations</code> namespace that we place directly on our
+DTO properties to define validation rules.</p>
+<p>We're going to add validation attributes to <code>CreateAuthorDto</code> and <code>UpdateAuthorDto</code> but not to <code>ReadAuthorDto</code>.</p>
+<p>You can notice that our DTO already uses the <code>required</code> keyword on String properties.</p>
+<p>It is worth understanding what that means before we add anything on top of it. In APIs, the required keyword works at the level of JSON deserialization. If a field is missing from the request body, or is explicitly set to null, <code>System.Text.JSON</code> rejects the request immediately, before we even get to the validation phase.</p>
+<p>When we run Scalar and add a blank <code>FirstName</code> and <code>LastName</code> they are set to empty strings. This is <strong>not</strong> the same as the null value.</p>
+<p>Data annotations include a <code>required</code> attribute, and it does more than the <code>required</code> keyword.</p>
+<p>Where the keyword only catches a missing or null field, the required attribute also rejects empty strings and whitespace-only strings.</p>
+<p>So the required attribute effectively covers the minimum length for us as well.</p>
+<pre class="hljs"><code><div>    public record CreateAuthorDto
+    {
+        [Required]
+        public required string FirstName { get; init; }
+        [Required]
+        public required string LastName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>So which one should we use? The <code>required</code> keyword or the <code>Required</code> attribute? Well, we will use both.</p>
+<p>The <code>required</code> keyword stays because it is a good C# practice regardless of HTTP. It ensures that whoever creates this object in code must provide a value.</p>
+<p>And the <code>Required</code> attribute gives us a proper runtime validation with clean descriptive error messages,
+covering null, empty and whitespace strings, all in one attribute.</p>
+<p>Let's also add an attribute that limits the length to 50 characters. Now let's think about year of birth. We want to restrict it to a sensible range.</p>
+<pre class="hljs"><code><div>    public record CreateAuthorDto
+    {
+        [Required]
+        [StringLength(50)]
+        public required string FirstName { get; init; }
+
+        [Required]
+        [StringLength(50)]
+        public required string LastName { get; init; }
+
+        [Range(-2000, 2026, ErrorMessage = <span class="hljs-string">&quot;Invalid year of birth&quot;</span>)]
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>This is a good moment to notice something. We just added validation to two properties without touching the controller at all.</p>
+<p>We define it in the DTO and the controller stays as it is. No digging through handler methods. No risk or forgetting to update one of them.</p>
+<p>That is the power of centralized validation. The rules live in one place and everything else just works.</p>
+<p>One more thing worth knowing. Our year of birth is a <strong>nullable int</strong>, meaning the field is optional. A client can omit it entirely. Range handles this gracefully.</p>
+<p>If the value is null, the attribute does nothing and lets it through.</p>
+<p>If a value is provided, it must fall within the specified range.</p>
+<p>Picking the right boundaries is an interesting problem. But it is not a programming problem. In a real project, these decisions would come from a business analyst or a product owner. Our job as developers is to implement whatever rules we are given.</p>
+<p>Let's do the same changes to <code>UpdateAuthorDto</code>. This, of course, is a duplication. But we discussed it in the section about DTOs. It's a price we pay for having fully independent DTOs.</p>
+<p>Now, let's clean up the controller.</p>
+<p>We can remove the manual validation checks from <code>Create</code> and <code>Update</code>.</p>
+<pre class="hljs"><code><div>[HttpPost()]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Create(CreateAuthorDto createDto)
+{
+    var author = mapper.ToEntity(createDto);
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, mapper.ToReadDto(author));
+}
+
+[HttpPut(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Update(int <span class="hljs-built_in">id</span>, UpdateAuthorDto updateDto)
+{
+    var existingAuthor = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingAuthor == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    mapper.UpdateEntity(updateDto, existingAuthor);
+
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> Ok(mapper.ToReadDto(existingAuthor));
+}
+</div></code></pre>
+<p>This helps us keep this class focused and following the single responsibility principle. It no longer concerns itself with validation.</p>
+<p>You will notice that the <code>ProducesResponseType</code> attributes are still here. These are unrelated to validation. They are metadata that tells OpenAPI which HTTP status codes this endpoint can return.</p>
+<p>So how does the validation actually happen now? We didn't add any validation code to the controller.</p>
+<p>The answer lies in the <code>ApiController</code> attribute at the top of our class. When a request comes in, ASP.NET Core first deserializes the JSON body into our DTO.</p>
+<p>If that succeeds, it then checks the resulting object against the validation attributes we defined. If anything fails, automatically returns a 400-bit request response with details about what went wrong and our handler code never runs.</p>
+<p>This is part of what is called the <strong>request pipeline</strong>. A sequence of steps every request goes through before it reaches our code.</p>
+<p>Test the <strong>POST</strong> handler in Scalar. Try to add a record with null values.</p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;https://tools.ietf.org/html/rfc9110#section-15.5.1&quot;</span>,
+  <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;One or more validation errors occurred.&quot;</span>,
+  <span class="hljs-string">&quot;status&quot;</span>: 400,
+  <span class="hljs-string">&quot;errors&quot;</span>: {
+    <span class="hljs-string">&quot;LastName&quot;</span>: [
+      <span class="hljs-string">&quot;The LastName field is required.&quot;</span>
+    ],
+    <span class="hljs-string">&quot;FirstName&quot;</span>: [
+      <span class="hljs-string">&quot;The FirstName field is required.&quot;</span>
+    ]
+  },
+  <span class="hljs-string">&quot;traceId&quot;</span>: <span class="hljs-string">&quot;00-9b44cb7955986e3de3f9c3922929b572-7f27a044ddac4299-00&quot;</span>
+}
+</div></code></pre>
+<p>We get this error message and the <code>POST</code> handler code doesn't run.</p>
+<h2 id=""></h2>
+
+</body>
+</html>
