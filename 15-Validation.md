@@ -218,115 +218,236 @@ Add the package:
 
 ## Validation with Fluent Validation
 
-Let's now write our first Fluent Validation Validator and use it in our categories endpoints.
+Add a new folder called ``Validators`` to the project.
 
-First, let's add a new folder called Validators to the project.
+Add a ``Categories`` folder.
 
-Inside it, I will add a Categories folder, as later we will have validators for other resources too.
+Now, let's create a file called ``CreateCategoryDtoValidator``.
 
-Now, let's create a file called CreateCategoryDTOValidator.
+To make this class a Fluent Validation Validator, we must make it inherit from ``AbstractValidator<T>``, where **T** is the type we want to validate.
 
-To make this class a Fluent Validation Validator, we must make it inherit from AbstractValidatorOfT,
+```bash
+using FluentValidation;
+using LibraryManagement.Api.DTOs.Categories;
 
-where T is the type we want to validate.
+namespace LibraryManagement.Api.Validators.Categories
+{
+    public class CreateCategoryDtoValidator : AbstractValidator<CreateCategoryDto>
+    {
+    }
+}
+```
 
 All the validation rules should be defined in the constructor.
 
-Let me write a rule saying that the name of a category should be non-empty and have maximum length of 50.
+Our ``CreateCategoryDto`` is very simple. So, two rules are all we need.
 
-Rule 4 takes a lambda that selects the property we want to validate.
+``UpdateCategoryDto`` is the same.
 
-Then we chain rules onto it.
+```bash
+    public class CreateCategoryDtoValidator : AbstractValidator<CreateCategoryDto>
+    {
+        public CreateCategoryDtoValidator()
+        {
+            RuleFor(dto => dto.Name)
+                .NotEmpty()
+                .WithMessage("Category name is required.")
+                .MaximumLength(50)
+                .WithMessage("Category name must not exceed 50 characters.");
+        }
+    }
+```
 
-Not empty rejects null, empty and whitespace strings.
+### UpdateCategoryDtoValidator
 
-Maximum length sets the upper limit.
+```bash
+    public class UpdateCategoryDtoValidator : AbstractValidator<UpdateCategoryDto>
+    {
+        public UpdateCategoryDtoValidator()
+        {
+            RuleFor(dto => dto.Name)
+                .NotEmpty()
+                .WithMessage("Category name is required.")
+                .MaximumLength(50)
+                .WithMessage("Category name must not exceed 50 characters.");
+        }
+    }
+```
 
-Our CreateCategoryDTO is very simple.
+Once again, these two validators are identical because our DTOs are identical. Here we are accepting some code repetition in exchange for keeping our types independent.
 
-So, two rules are all we need.
+It often happens that we need slightly different validation rules for creation and update. And then we would be happy we have two separate validators.
 
-But Fluent Validation has a lot more to offer.
+Now, let's register our validators in ``Program.cs``.
 
-And we will explore more of its options soon.
+```bash
+builder.Services.AddScoped<AuthorMapper>();
+builder.Services.AddScoped<CategoryMapper>();
+builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
+builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
+```
 
-Now, let's create the same for UpdateCategoryDTO.
+Each line tells the framework. When something asks for ``IValidator<T>``, provide this specific validator class.
 
-Once again, these two validators are identical because our DTOs are identical.
+Because we just registered the validator in the ``Program.cs``, the framework knows how to provide it automatically. 
 
-As we discussed earlier, that is often how it goes in programming.
+Now, let's wire the Validator to the ``Create`` handler.
 
-Every design decision comes with trade-offs.
+Let's now call ``ValidateAsync`` and capture the result. ``ValidateAsync`` runs all the rules we defined in our validator against the incoming DTO, and returns a ``ValidationResult`` object. That object tells us whether validation passed, and if not, what exactly failed.
 
-And here we are accepting some code repetition in exchange for keeping our types independent.
+```bash
+private static async Task<Results<CreatedAtRoute<ReadCategoryDto>, ProblemHttpResult>> Create(CreateCategoryDto createDto, 
+                        LibraryDbContext dbContext, 
+                        CategoryMapper mapper,
+                        IValidator<CreateCategoryDto> validator)
+{
+    var validationResult = await validator.ValidateAsync(createDto);
+    if (!validationResult.IsValid)
+    {
+        return TypedResults.Problem( new ValidationProblemDetails(validationResult.ToDictionary())
+        {
+            Status = StatusCodes.Status400BadRequest
+        });
+    }
+    ...
+```
 
-It often happens that we need slightly different validation rules for creation and update.
+Remove the manual ``IsNullOfWhitespace`` validation check.
 
-And then we would be happy we have two separate validators.
+Now, let's check the result and return a 400 response if validation failed. ``ToDictionary`` gives us a dictionary where each key is a field name, and each value is an array of error messages for that field. 
+We wrap that in ``ValidationProblemDetails``, a built-in class that formats it as a standard ProblemDetails response, and return it with a 400 status.
 
-However, another developer might reasonably make the opposite call.
+```bash
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Name": [
+      "Category name is required."
+    ]
+  }
+}
+```
 
-Less duplication, more coupling.
+Do the same for ``Update``. We add the same validation code block for ``Update`` as we did for ``Create``. We need to refactor.
 
-Neither choice is wrong.
+## Validation with Fluent Validation refactoring
 
-In programming, we rarely get to pick between good and perfect.
+To get rid of the duplicated code we will do that with the help of an **Extension method**.
 
-We are choosing between two imperfect options.
+Create a new folder called **Extensions**, and inside it, a new file called ``ValidationExtensions``. 
+Let's make this class **static**.
 
-Let me move this validator to its own file.
+```bash
+namespace LibraryManagement.Api.Extensions
+{
+    public static class ValidationExtensions
+    {
+        public static ProblemHttpResult ToProblem(this ValidationResult validationResult)
+        {
+            return TypedResults.Problem(new ValidationProblemDetails(validationResult.ToDictionary())
+            {
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+    }
+}
+```
+This doesn't compile because Visual Studio imported the wrong namespace for validation result.
 
-Now, let's register our validators in Program.cs.
+Add these ``using`` statements.
 
-Each line tells the framework.
+```bash
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Http.HttpResults;
+```
 
-When something asks for IValidator of T, provide this specific validator class.
+This is how it works. On any validation result, we will be able to call this method as if it was defined on this type. It will then produce a problem HTTP result object.
 
-As we add more validators to the project, we will add more lines here.
+Now let's go back to both handlers and replace the duplicated block with a single call.
 
-Now, let's wire the validator into the create handler.
+```bash
+    if (!validationResult.IsValid)
+    {
+        return validationResult.ToProblem();
+    }
+```
 
-First, we add IValidator of CreateCategoryDTO as a parameter.
+### Final Create
 
-Because we just registered the validator in the Program.cs,
+```bash
+private static async Task<Results<CreatedAtRoute<ReadCategoryDto>, ProblemHttpResult>> Create(CreateCategoryDto createDto, 
+                        LibraryDbContext dbContext, 
+                        CategoryMapper mapper,
+                        IValidator<CreateCategoryDto> validator)
+{
+    var validationResult = await validator.ValidateAsync(createDto);
+    if (!validationResult.IsValid)
+    {
+        return validationResult.ToProblem();
+    }
 
-the framework knows how to provide it automatically.
+    if (await dbContext.Categories.AnyAsync(existingCategory => existingCategory.Name == createDto.Name))
+    {
+        return TypedResults.Problem(
+                detail: $"A category with the name '{createDto.Name}' already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+    }
 
-Let's now call ValidateAsync and capture the result.
+    var category = mapper.ToEntity(createDto);
 
-ValidateAsync runs all the rules we defined in our validator against the incoming DTO,
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
 
-and returns a ValidationResult object.
+    return TypedResults.CreatedAtRoute(mapper.ToReadDto(category), "GetCategoryById", new { id = category.Id });
+}
+```
 
-That object tells us whether validation passed, and if not, what exactly failed.
+Test it in Scalar with no data and we get the correct result.
 
-Now, let's check the result and return a 400 response if validation failed.
+Also test with a ``Name`` that is longer than 50 characters and we get:
 
-ToDictionary gives us a dictionary where each key is a field name,
+```bash
+"status": 400,
+  "errors": {
+    "Name": [
+      "Category name must not exceed 50 characters."
+    ]
+    ...
+```
 
-and each value is an array of error messages for that field.
 
-We wrap that in ValidationProblemDetails,
 
-a built-in class that formats it as a standard ProblemDetails response,
 
-and return it with a 400 status.
+Let's make sure it works.
 
-Let's also remove the manual IsNullOfWhitespace check.
+I will leave a breakpoint in the create method.
 
-Now, the validator handles that for us.
+Alright, let's send an invite post request for categories.
 
-Now, let's do the same for Update.
+I will send a name that is way longer than 50 characters.
 
-Inject IValidator of UpdateCategoryDTO, call ValidateAsync,
+When the breakpoint hits, we are inside the handler.
 
-add the same validation block, and remove the manual check.
+Unlike with data annotations used with the API control attribute, invalid requests are
 
-I see one problem here.
+not stopped before our code runs.
 
-This validation block is duplicated between Create and Update.
+They enter the handler and it is our code that rejects them.
 
-If we add more endpoints, we will keep copying it.
+This is an important difference between fluent validation and validation with data annotations.
 
-Let's deal with it in the next video.
+There is a way around that and point filters, but we will learn about them later in the course.
 
+When using them, we can reject such an invalid request before it reaches the handler method.
+
+With controllers and data annotations, we get the proper behavior out of the box without any extra work.
+
+We get a 400 response with error structured by field.
+
+Let's also verify that a valid request works. It does.
+
+We are past the validation part.
+
+And we get 201 created as a response. Great.
