@@ -354,6 +354,7 @@ namespace LibraryManagement.Api.Extensions
     }
 }
 ```
+
 This doesn't compile because Visual Studio imported the wrong namespace for validation result.
 
 Add these ``using`` statements.
@@ -417,37 +418,60 @@ Also test with a ``Name`` that is longer than 50 characters and we get:
     ...
 ```
 
+## Validation rules - Data Annotation vd Fluent Validation
 
+![DTOS vs Fluent Validation](assets/images/dtos-vs-fluent-validation.jpg "DTOS vs Fluent Validation")
 
+This diagram shows the most commonly used validation rules in both Data Annotations and Fluent Validation, and see how they compare side by side.
 
-Let's make sure it works.
+There are pros and cons in both libraries.
 
-I will leave a breakpoint in the create method.
+## Validation and database checks
 
-Alright, let's send an invite post request for categories.
+We have this piece of validation in our ``Create`` handler for ``Categories``.
 
-I will send a name that is way longer than 50 characters.
+```bash
+if (await dbContext.Categories.AnyAsync(existingCategory => existingCategory.Name == createDName))
+{
+    return TypedResults.Problem(
+            detail: $"A category with the name '{createDto.Name}' already exists.",
+            statusCode: StatusCodes.Status409Conflict);
+}
 
-When the breakpoint hits, we are inside the handler.
+```
 
-Unlike with data annotations used with the API control attribute, invalid requests are
+ What would happen if we moved such a check into the validator? We need to discuss why it is not the best idea.
 
-not stopped before our code runs.
+We are querying the database to make sure no ``Category`` with the same name already exists.
 
-They enter the handler and it is our code that rejects them.
+We already have a validator for this DTO, so maybe we should just move this check there and keep all validation in one place.
 
-This is an important difference between fluent validation and validation with data annotations.
+Technically, it is possible, but it is not recommended.
 
-There is a way around that and point filters, but we will learn about them later in the course.
+Let's see what it would look like:
 
-When using them, we can reject such an invalid request before it reaches the handler method.
+![Shifting validation from controller to the validator](assets/images/async-in-the-validator.jpg "Shifting validation from controller to the validator")
 
-With controllers and data annotations, we get the proper behavior out of the box without any extra work.
+We would need to inject the ``Db.Context`` into the validator and use ``MustAsync`` to run an asynchronous check against the database. It would work, but it would cause quite a lot of problems.
 
-We get a 400 response with error structured by field.
+![Validator responsibilities](assets/images/validator-responsibilities.jpg "Validator responsibilities")
 
-Let's also verify that a valid request works. It does.
+The first is the status code. In Fluent Validation, failures result in a **400 BadRequest**, but the naming conflict is not really a bad request.
 
-We are past the validation part.
+The request is valid, it just conflicts with the current state of our data. So the correct status code for this is **409 Conflict**, which is what we are returning now. Moving this check to the validator means we lose that distinction.
 
-And we get 201 created as a response. Great.
+Unless we build custom error handling around it, which adds complexity for no real gain.
+
+The second problem is the responsibility of the validator. A validator's job is to check the shape and format of the incoming data.
+
+Things like is the name present, is it within the allowed length, does it match the expected pattern.
+
+It should be easy and quick and should not need to know about the database. The moment our validator starts making database calls, it becomes something closer to a service and that blurs the boundaries between different parts of the code.
+
+It makes the validator slower and harder to test, because now you need a database or mock a one just to run a simple validation test.
+
+So the rule of thumb is this:
+
+![Rule of thumb](assets/images/rule-of-thumb.jpg "Rule of thumb")
+
+It keeps each piece of code focused on one thing and the status codes meaningful.

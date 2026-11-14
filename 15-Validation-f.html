@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Validation</title>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="assets/css/starter-template.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?lang=css&amp;skin=sunburst"></script>
+<style type="text/css">
+html {
+	font-size: 90.0%;
+}
+
+h2 {
+	margin-top: 60px;
+}
+
+h4, h3 {
+	padding-top: 40px!;		
+}
+
+p {
+	font-size: 1.2em;
+}
+h4 {
+	font-size: 1.4em;
+}
+
+img, pre.prettyprint {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+    color:#007bff;
+
+}
+blockquote {
+    border-left: 4px solid #999;
+    padding-left: 1rem;
+    page-break-inside: avoid;
+}
+:target:before {
+  content: "";
+  display: block;
+  height: 80px; /* adjust this value to your needs */
+  margin: -80px 0 0; /* this should be a negative value of the height above */
+}
+</style>
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Building ASP.NET Core REST APIs</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Validation <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <div class="starter-template">
+
+
+<h1 id="validation">Validation</h1>
+<p>Validation is about protecting our application from bad data.</p>
+<p><img src="assets/images/validation.jpg" alt="Using validation" title="Using validation"></p>
+<p>A client sends a request with a missing field, a value in the wrong format, or a number that makes no sense in context. Without validation, that data goes straight into our database, and the problems it causes often only show up much later,</p>
+<p>Our controllers already have some basic validation in place.</p>
+<p>Let's think about what we are not covering.</p>
+<p>For example, let's think about the <code>YearOfBirth</code> property on the author. Nothing stops a client from sending a value of minus 10,000 or 10,000. That request will pass through our handler and get saved to the database without any complaint.</p>
+<p>We could add a check for that, but that is exactly where things start to get messy.</p>
+<p>Look at what we already have for <code>FirstName</code> and <code>LastName</code>. That check appears in the <code>Create</code> method and then again in the <code>Update</code> method, written the same way twice.</p>
+<p>If we change validation rules we have to change every manual check we have in place.</p>
+<p>So what do we actually want from a good validation approach? Well, three things.</p>
+<p><img src="assets/images/validation-done-right.jpg" alt="Validation done right" title="Validation done right"></p>
+<h2 id="validation-with-data-annotations">Validation with Data Annotations</h2>
+<p>We will learn how to validate incoming requests in a controller using data annotations.</p>
+<p>When we run a <strong>POST</strong> request with an empty author name We enter the <code>Create</code> method, even though the <strong>request data</strong> is clearly invalid. This is wasteful. We are running handler code for a request we know is wrong.</p>
+<p>Ideally, bad requests should be rejected as early as possible, before any of that happens.</p>
+<p>The approach we are going to use for controllers is called <strong>data annotations</strong>.</p>
+<p>Attributes from the <code>System.ComponentModel.DataAnnotations</code> namespace that we place directly on our
+DTO properties to define validation rules.</p>
+<p>We're going to add validation attributes to <code>CreateAuthorDto</code> and <code>UpdateAuthorDto</code> but not to <code>ReadAuthorDto</code>.</p>
+<p>You can notice that our DTO already uses the <code>required</code> keyword on String properties.</p>
+<p>It is worth understanding what that means before we add anything on top of it. In APIs, the required keyword works at the level of JSON deserialization. If a field is missing from the request body, or is explicitly set to null, <code>System.Text.JSON</code> rejects the request immediately, before we even get to the validation phase.</p>
+<p>When we run Scalar and add a blank <code>FirstName</code> and <code>LastName</code> they are set to empty strings. This is <strong>not</strong> the same as the null value.</p>
+<p>Data annotations include a <code>required</code> attribute, and it does more than the <code>required</code> keyword.</p>
+<p>Where the keyword only catches a missing or null field, the required attribute also rejects empty strings and whitespace-only strings.</p>
+<p>So the required attribute effectively covers the minimum length for us as well.</p>
+<pre class="prettyprint"><code><div>    public record CreateAuthorDto
+    {
+        [Required]
+        public required string FirstName { get; init; }
+        [Required]
+        public required string LastName { get; init; }
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>So which one should we use? The <code>required</code> keyword or the <code>Required</code> attribute? Well, we will use both.</p>
+<p>The <code>required</code> keyword stays because it is a good C# practice regardless of HTTP. It ensures that whoever creates this object in code must provide a value.</p>
+<p>And the <code>Required</code> attribute gives us a proper runtime validation with clean descriptive error messages,
+covering null, empty and whitespace strings, all in one attribute.</p>
+<p>Let's also add an attribute that limits the length to 50 characters. Now let's think about year of birth. We want to restrict it to a sensible range.</p>
+<pre class="prettyprint"><code><div>    public record CreateAuthorDto
+    {
+        [Required]
+        [StringLength(50)]
+        public required string FirstName { get; init; }
+
+        [Required]
+        [StringLength(50)]
+        public required string LastName { get; init; }
+
+        [Range(-2000, 2026, ErrorMessage = <span class="hljs-string">&quot;Invalid year of birth&quot;</span>)]
+        public int? YearOfBirth { get; init; }
+    }
+</div></code></pre>
+<p>This is a good moment to notice something. We just added validation to two properties without touching the controller at all.</p>
+<p>We define it in the DTO and the controller stays as it is. No digging through handler methods. No risk or forgetting to update one of them.</p>
+<p>That is the power of centralized validation. The rules live in one place and everything else just works.</p>
+<p>One more thing worth knowing. Our year of birth is a <strong>nullable int</strong>, meaning the field is optional. A client can omit it entirely. Range handles this gracefully.</p>
+<p>If the value is null, the attribute does nothing and lets it through.</p>
+<p>If a value is provided, it must fall within the specified range.</p>
+<p>Picking the right boundaries is an interesting problem. But it is not a programming problem. In a real project, these decisions would come from a business analyst or a product owner. Our job as developers is to implement whatever rules we are given.</p>
+<p>Let's do the same changes to <code>UpdateAuthorDto</code>. This, of course, is a duplication. But we discussed it in the section about DTOs. It's a price we pay for having fully independent DTOs.</p>
+<p>Now, let's clean up the controller.</p>
+<p>We can remove the manual validation checks from <code>Create</code> and <code>Update</code>.</p>
+<pre class="prettyprint"><code><div>[HttpPost()]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Create(CreateAuthorDto createDto)
+{
+    var author = mapper.ToEntity(createDto);
+
+    dbContext.Authors.Add(author);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> CreatedAtAction(nameof(GetById), new { <span class="hljs-built_in">id</span> = author.Id }, mapper.ToReadDto(author));
+}
+
+[HttpPut(<span class="hljs-string">&quot;{id:int}&quot;</span>)]
+[ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task&lt;ActionResult&lt;ReadAuthorDto&gt;&gt; Update(int <span class="hljs-built_in">id</span>, UpdateAuthorDto updateDto)
+{
+    var existingAuthor = await dbContext.Authors.FindAsync(<span class="hljs-built_in">id</span>);
+
+    <span class="hljs-keyword">if</span> (existingAuthor == null)
+    {
+        <span class="hljs-built_in">return</span> Problem(
+            detail: $<span class="hljs-string">&quot;Author with ID {id} not found.&quot;</span>,
+            statusCode: StatusCodes.Status404NotFound);
+    }
+
+    mapper.UpdateEntity(updateDto, existingAuthor);
+
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> Ok(mapper.ToReadDto(existingAuthor));
+}
+</div></code></pre>
+<p>This helps us keep this class focused and following the single responsibility principle. It no longer concerns itself with validation.</p>
+<p>You will notice that the <code>ProducesResponseType</code> attributes are still here. These are unrelated to validation. They are metadata that tells OpenAPI which HTTP status codes this endpoint can return.</p>
+<p>So how does the validation actually happen now? We didn't add any validation code to the controller.</p>
+<p>The answer lies in the <code>ApiController</code> attribute at the top of our class. When a request comes in, ASP.NET Core first deserializes the JSON body into our DTO.</p>
+<p>If that succeeds, it then checks the resulting object against the validation attributes we defined. If anything fails, automatically returns a 400-bit request response with details about what went wrong and our handler code never runs.</p>
+<p>This is part of what is called the <strong>request pipeline</strong>. A sequence of steps every request goes through before it reaches our code.</p>
+<p>Test the <strong>POST</strong> handler in Scalar. Try to add a record with null values.</p>
+<pre class="prettyprint"><code><div>{
+  <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;https://tools.ietf.org/html/rfc9110#section-15.5.1&quot;</span>,
+  <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;One or more validation errors occurred.&quot;</span>,
+  <span class="hljs-string">&quot;status&quot;</span>: 400,
+  <span class="hljs-string">&quot;errors&quot;</span>: {
+    <span class="hljs-string">&quot;LastName&quot;</span>: [
+      <span class="hljs-string">&quot;The LastName field is required.&quot;</span>
+    ],
+    <span class="hljs-string">&quot;FirstName&quot;</span>: [
+      <span class="hljs-string">&quot;The FirstName field is required.&quot;</span>
+    ]
+  },
+  <span class="hljs-string">&quot;traceId&quot;</span>: <span class="hljs-string">&quot;00-9b44cb7955986e3de3f9c3922929b572-7f27a044ddac4299-00&quot;</span>
+}
+</div></code></pre>
+<p>We get this error message and the <code>POST</code> handler code doesn't run.</p>
+<h2 id="introduction-to-fluent-validation">Introduction to Fluent Validation</h2>
+<p>We already have validation in place for our controllers using Data Annotations. For minimal API endpoints, we could technically use Data Annotations as well.</p>
+<p>But without the API controller attribute, there is no automatic mechanism that runs the validation for us. We would have to wire it up manually.</p>
+<p>So, for our minimal API's endpoints, we will use <strong>Fluent Validation</strong>.</p>
+<p>It is a popular, open-source library for building validation rules in .NET. Instead of placing attributes directly on DTO properties, we define rules in a separate class. One validator class per DTO.</p>
+<p>Both approaches to validation, with <strong>Data Annotations</strong> and <strong>Fluent Validation</strong>, are widely used in the .NET world. And neither is wrong.</p>
+<p>In practice, most teams pick one approach and stick with it across the entire API for consistency.</p>
+<p><strong>Fluent Validation</strong> gives us more flexibility in how we express validation rules.</p>
+<p>For example, with Data Annotations, the range attribute requires compile-time constants. We hard coded the end date.</p>
+<pre class="prettyprint"><code><div>    [Range(-2000, 2026, ErrorMessage = <span class="hljs-string">&quot;Invalid year of birth&quot;</span>)]
+</div></code></pre>
+<p>With <strong>Fluent Validation</strong>, we can write something like this.</p>
+<pre class="prettyprint"><code><div>    RuleFor(dto =&gt; dto.YearOfBirth)
+        .InclusiveBetween(-2000, DateTime.Now.Year)
+</div></code></pre>
+<p>And it just works, because the rules are defined outside the attributes. <strong>Data Annotations</strong> have their own strengths, though.</p>
+<p>For simple cases, a single attribute on a property is less code than a separate validator class. They also work out-of-the-box in controllers, without any additional library and because the attributes sit directly on the DTO,</p>
+<p>Fluent Validation works with both Minimal APIs and Controllers.</p>
+<p>Add the package:</p>
+<pre class="prettyprint"><code><div>    dotnet add package FluentValidation
+</div></code></pre>
+<h2 id="validation-with-fluent-validation">Validation with Fluent Validation</h2>
+<p>Add a new folder called <code>Validators</code> to the project.</p>
+<p>Add a <code>Categories</code> folder.</p>
+<p>Now, let's create a file called <code>CreateCategoryDtoValidator</code>.</p>
+<p>To make this class a Fluent Validation Validator, we must make it inherit from <code>AbstractValidator&lt;T&gt;</code>, where <strong>T</strong> is the type we want to validate.</p>
+<pre class="prettyprint"><code><div>using FluentValidation;
+using LibraryManagement.Api.DTOs.Categories;
+
+namespace LibraryManagement.Api.Validators.Categories
+{
+    public class CreateCategoryDtoValidator : AbstractValidator&lt;CreateCategoryDto&gt;
+    {
+    }
+}
+</div></code></pre>
+<p>All the validation rules should be defined in the constructor.</p>
+<p>Our <code>CreateCategoryDto</code> is very simple. So, two rules are all we need.</p>
+<p><code>UpdateCategoryDto</code> is the same.</p>
+<pre class="prettyprint"><code><div>    public class CreateCategoryDtoValidator : AbstractValidator&lt;CreateCategoryDto&gt;
+    {
+        public <span class="hljs-function"><span class="hljs-title">CreateCategoryDtoValidator</span></span>()
+        {
+            RuleFor(dto =&gt; dto.Name)
+                .NotEmpty()
+                .WithMessage(<span class="hljs-string">&quot;Category name is required.&quot;</span>)
+                .MaximumLength(50)
+                .WithMessage(<span class="hljs-string">&quot;Category name must not exceed 50 characters.&quot;</span>);
+        }
+    }
+</div></code></pre>
+<h3 id="updatecategorydtovalidator">UpdateCategoryDtoValidator</h3>
+<pre class="prettyprint"><code><div>    public class UpdateCategoryDtoValidator : AbstractValidator&lt;UpdateCategoryDto&gt;
+    {
+        public <span class="hljs-function"><span class="hljs-title">UpdateCategoryDtoValidator</span></span>()
+        {
+            RuleFor(dto =&gt; dto.Name)
+                .NotEmpty()
+                .WithMessage(<span class="hljs-string">&quot;Category name is required.&quot;</span>)
+                .MaximumLength(50)
+                .WithMessage(<span class="hljs-string">&quot;Category name must not exceed 50 characters.&quot;</span>);
+        }
+    }
+</div></code></pre>
+<p>Once again, these two validators are identical because our DTOs are identical. Here we are accepting some code repetition in exchange for keeping our types independent.</p>
+<p>It often happens that we need slightly different validation rules for creation and update. And then we would be happy we have two separate validators.</p>
+<p>Now, let's register our validators in <code>Program.cs</code>.</p>
+<pre class="prettyprint"><code><div>builder.Services.AddScoped&lt;AuthorMapper&gt;();
+builder.Services.AddScoped&lt;CategoryMapper&gt;();
+builder.Services.AddScoped&lt;IValidator&lt;CreateCategoryDto&gt;, CreateCategoryDtoValidator&gt;();
+builder.Services.AddScoped&lt;IValidator&lt;UpdateCategoryDto&gt;, UpdateCategoryDtoValidator&gt;();
+</div></code></pre>
+<p>Each line tells the framework. When something asks for <code>IValidator&lt;T&gt;</code>, provide this specific validator class.</p>
+<p>Because we just registered the validator in the <code>Program.cs</code>, the framework knows how to provide it automatically.</p>
+<p>Now, let's wire the Validator to the <code>Create</code> handler.</p>
+<p>Let's now call <code>ValidateAsync</code> and capture the result. <code>ValidateAsync</code> runs all the rules we defined in our validator against the incoming DTO, and returns a <code>ValidationResult</code> object. That object tells us whether validation passed, and if not, what exactly failed.</p>
+<pre class="prettyprint"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Create(CreateCategoryDto createDto, 
+                        LibraryDbContext dbContext, 
+                        CategoryMapper mapper,
+                        IValidator&lt;CreateCategoryDto&gt; validator)
+{
+    var validationResult = await validator.ValidateAsync(createDto);
+    <span class="hljs-keyword">if</span> (!validationResult.IsValid)
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem( new ValidationProblemDetails(validationResult.ToDictionary())
+        {
+            Status = StatusCodes.Status400BadRequest
+        });
+    }
+    ...
+</div></code></pre>
+<p>Remove the manual <code>IsNullOfWhitespace</code> validation check.</p>
+<p>Now, let's check the result and return a 400 response if validation failed. <code>ToDictionary</code> gives us a dictionary where each key is a field name, and each value is an array of error messages for that field.
+We wrap that in <code>ValidationProblemDetails</code>, a built-in class that formats it as a standard ProblemDetails response, and return it with a 400 status.</p>
+<pre class="prettyprint"><code><div>{
+  <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;https://tools.ietf.org/html/rfc9110#section-15.5.1&quot;</span>,
+  <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;One or more validation errors occurred.&quot;</span>,
+  <span class="hljs-string">&quot;status&quot;</span>: 400,
+  <span class="hljs-string">&quot;errors&quot;</span>: {
+    <span class="hljs-string">&quot;Name&quot;</span>: [
+      <span class="hljs-string">&quot;Category name is required.&quot;</span>
+    ]
+  }
+}
+</div></code></pre>
+<p>Do the same for <code>Update</code>. We add the same validation code block for <code>Update</code> as we did for <code>Create</code>. We need to refactor.</p>
+<h2 id="validation-with-fluent-validation-refactoring">Validation with Fluent Validation refactoring</h2>
+<p>To get rid of the duplicated code we will do that with the help of an <strong>Extension method</strong>.</p>
+<p>Create a new folder called <strong>Extensions</strong>, and inside it, a new file called <code>ValidationExtensions</code>.
+Let's make this class <strong>static</strong>.</p>
+<pre class="prettyprint"><code><div>namespace LibraryManagement.Api.Extensions
+{
+    public static class ValidationExtensions
+    {
+        public static ProblemHttpResult ToProblem(this ValidationResult validationResult)
+        {
+            <span class="hljs-built_in">return</span> TypedResults.Problem(new ValidationProblemDetails(validationResult.ToDictionary())
+            {
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+    }
+}
+</div></code></pre>
+<p>This doesn't compile because Visual Studio imported the wrong namespace for validation result.</p>
+<p>Add these <code>using</code> statements.</p>
+<pre class="prettyprint"><code><div>using FluentValidation.Results;
+using Microsoft.AspNetCore.Http.HttpResults;
+</div></code></pre>
+<p>This is how it works. On any validation result, we will be able to call this method as if it was defined on this type. It will then produce a problem HTTP result object.</p>
+<p>Now let's go back to both handlers and replace the duplicated block with a single call.</p>
+<pre class="prettyprint"><code><div>    <span class="hljs-keyword">if</span> (!validationResult.IsValid)
+    {
+        <span class="hljs-built_in">return</span> validationResult.ToProblem();
+    }
+</div></code></pre>
+<h3 id="final-create">Final Create</h3>
+<pre class="prettyprint"><code><div>private static async Task&lt;Results&lt;CreatedAtRoute&lt;ReadCategoryDto&gt;, ProblemHttpResult&gt;&gt; Create(CreateCategoryDto createDto, 
+                        LibraryDbContext dbContext, 
+                        CategoryMapper mapper,
+                        IValidator&lt;CreateCategoryDto&gt; validator)
+{
+    var validationResult = await validator.ValidateAsync(createDto);
+    <span class="hljs-keyword">if</span> (!validationResult.IsValid)
+    {
+        <span class="hljs-built_in">return</span> validationResult.ToProblem();
+    }
+
+    <span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(existingCategory =&gt; existingCategory.Name == createDto.Name))
+    {
+        <span class="hljs-built_in">return</span> TypedResults.Problem(
+                detail: $<span class="hljs-string">&quot;A category with the name &#x27;{createDto.Name}&#x27; already exists.&quot;</span>,
+                statusCode: StatusCodes.Status409Conflict);
+    }
+
+    var category = mapper.ToEntity(createDto);
+
+    dbContext.Categories.Add(category);
+    await dbContext.SaveChangesAsync();
+
+    <span class="hljs-built_in">return</span> TypedResults.CreatedAtRoute(mapper.ToReadDto(category), <span class="hljs-string">&quot;GetCategoryById&quot;</span>, new { <span class="hljs-built_in">id</span> = category.Id });
+}
+</div></code></pre>
+<p>Test it in Scalar with no data and we get the correct result.</p>
+<p>Also test with a <code>Name</code> that is longer than 50 characters and we get:</p>
+<pre class="prettyprint"><code><div><span class="hljs-string">&quot;status&quot;</span>: 400,
+  <span class="hljs-string">&quot;errors&quot;</span>: {
+    <span class="hljs-string">&quot;Name&quot;</span>: [
+      <span class="hljs-string">&quot;Category name must not exceed 50 characters.&quot;</span>
+    ]
+    ...
+</div></code></pre>
+<h2 id="validation-rules---data-annotation-vd-fluent-validation">Validation rules - Data Annotation vd Fluent Validation</h2>
+<p><img src="assets/images/dtos-vs-fluent-validation.jpg" alt="DTOS vs Fluent Validation" title="DTOS vs Fluent Validation"></p>
+<p>This diagram shows the most commonly used validation rules in both Data Annotations and Fluent Validation, and see how they compare side by side.</p>
+<p>There are pros and cons in both libraries.</p>
+<h2 id="validation-and-database-checks">Validation and database checks</h2>
+<p>We have this piece of validation in our <code>Create</code> handler for <code>Categories</code>.</p>
+<pre class="prettyprint"><code><div><span class="hljs-keyword">if</span> (await dbContext.Categories.AnyAsync(existingCategory =&gt; existingCategory.Name == createDName))
+{
+    <span class="hljs-built_in">return</span> TypedResults.Problem(
+            detail: $<span class="hljs-string">&quot;A category with the name &#x27;{createDto.Name}&#x27; already exists.&quot;</span>,
+            statusCode: StatusCodes.Status409Conflict);
+}
+
+</div></code></pre>
+<p>What would happen if we moved such a check into the validator? We need to discuss why it is not the best idea.</p>
+<p>We are querying the database to make sure no <code>Category</code> with the same name already exists.</p>
+<p>We already have a validator for this DTO, so maybe we should just move this check there and keep all validation in one place.</p>
+<p>Technically, it is possible, but it is not recommended.</p>
+<p>Let's see what it would look like:</p>
+<p><img src="assets/images/async-in-the-validator.jpg" alt="Shifting validation from controller to the validator" title="Shifting validation from controller to the validator"></p>
+<p>We would need to inject the <code>Db.Context</code> into the validator and use <code>MustAsync</code> to run an asynchronous check against the database. It would work, but it would cause quite a lot of problems.</p>
+<p><img src="assets/images/validator-responsibilities.jpg" alt="Validator responsibilities" title="Validator responsibilities"></p>
+<p>The first is the status code. In Fluent Validation, failures result in a <strong>400 BadRequest</strong>, but the naming conflict is not really a bad request.</p>
+<p>The request is valid, it just conflicts with the current state of our data. So the correct status code for this is <strong>409 Conflict</strong>, which is what we are returning now. Moving this check to the validator means we lose that distinction.</p>
+<p>Unless we build custom error handling around it, which adds complexity for no real gain.</p>
+<p>The second problem is the responsibility of the validator. A validator's job is to check the shape and format of the incoming data.</p>
+<p>Things like is the name present, is it within the allowed length, does it match the expected pattern.</p>
+<p>It should be easy and quick and should not need to know about the database. The moment our validator starts making database calls, it becomes something closer to a service and that blurs the boundaries between different parts of the code.</p>
+<p>It makes the validator slower and harder to test, because now you need a database or mock a one just to run a simple validation test.</p>
+<p>So the rule of thumb is this:</p>
+<p><img src="assets/images/rule-of-thumb.jpg" alt="Rule of thumb" title="Rule of thumb"></p>
+<p>It keeps each piece of code focused on one thing and the status codes meaningful.</p>
+
+
+
+</div><!-- starter-template -->
+</div><!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>
